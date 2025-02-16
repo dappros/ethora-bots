@@ -1,8 +1,13 @@
-This is a guide to deploying multiple bots on a single server instance, managed by pm2.
+# Running Multiple Bots with PM2
 
-# Deployment steps
+This guide explains how to deploy and manage multiple bots on a single server instance using PM2 process manager.
 
-# On your Digital Ocean droplet
+## Initial Setup
+
+First, clone and set up the repository:
+
+```bash
+# Clone the repository
 git clone https://github.com/dappros/ethora-bots.git
 cd ethora-bots
 
@@ -11,39 +16,70 @@ cd packages/bot-core
 npm install
 npm run build
 npm link
+```
 
-# Setup OpenAI bot
+## Bot Configuration
+
+### OpenAI Bot Setup
+```bash
 cd ../../bots/openai-bot
 npm install
 npm link @ethora/bot-core
 cp .env.example .env
-# Edit .env with actual credentials
+# Edit .env with your OpenAI bot credentials
+```
 
-# Setup Prisoner bot
+### Prisoner's Dilemma Bot Setup
+```bash
 cd ../prisoner-bot
 npm install
 npm link @ethora/bot-core
 cp .env.example .env
-# Edit .env with actual credentials
+# Edit .env with your Prisoner bot credentials
+```
 
-# Go back to root and start both bots
+## Starting the Bots
+
+Return to the root directory and start both bots using PM2:
+```bash
 cd ../..
 pm2 start ecosystem.config.js
+```
 
-# Useful pm2 commands (examples)
+## PM2 Management Commands
 
-# 1. View logs: 
+### Viewing Logs
+```bash
 pm2 logs                 # View all logs
 pm2 logs openai-bot      # View only OpenAI bot logs
 pm2 logs prisoner-bot    # View only Prisoner's Dilemma bot logs
+```
 
-2. Monitor processes:
+### Monitoring
+```bash
 pm2 monit               # Opens an interactive monitor
 pm2 status             # Shows status of all processes
+```
 
-3. Process management:
+### Process Management
+```bash
 pm2 stop all           # Stop all bots
 pm2 stop openai-bot    # Stop specific bot
 pm2 restart all        # Restart all bots
 pm2 delete all         # Remove all processes from PM2
+```
+
+## Additional PM2 Features
+
+### Auto-restart on System Boot
+```bash
+pm2 startup            # Generate startup script
+pm2 save              # Save current process list
+```
+
+### Monitoring Memory/CPU
+```bash
+pm2 status            # Basic status
+pm2 monit             # Detailed real-time monitoring
+```
 
