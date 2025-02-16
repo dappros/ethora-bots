@@ -7,6 +7,7 @@ export interface BaseBotConfig {
   password: string
   roomJid: string
   botName: string
+  xmppEndpoint: string
 }
 
 export interface XMPPStanza {
@@ -25,7 +26,7 @@ export abstract class BaseBot {
     this.botName = config.botName
 
     this.client = xmppClient({
-      service: 'wss://xmpp.ethoradev.com:5443/ws',
+      service: config.xmppEndpoint,
       username: config.jid.split('@')[0],
       password: config.password,
     })
