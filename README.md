@@ -2,6 +2,8 @@
 
 This repository contains a collection of chatbots for the Ethora platform. It's structured as a monorepo containing a core bot framework and various bot implementations.
 
+You can run one bot individually or multiple bots at once in different chat rooms using PM2. See ecosystem.md for latter option.
+
 ## Repository Structure
 
 ```
