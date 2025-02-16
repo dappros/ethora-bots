@@ -2,7 +2,7 @@ import { BaseBot, BaseBotConfig } from '@ethora/bot-core'
 import OpenAI from 'openai'
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 
-interface OpenAIBotConfig extends BaseBotConfig {
+export interface OpenAIBotConfig extends BaseBotConfig {
   openaiKey: string
 }
 
@@ -11,16 +11,22 @@ export class OpenAIBot extends BaseBot {
   private chatHistory: ChatCompletionMessageParam[] = []
 
   constructor(config: OpenAIBotConfig) {
-    super(config)
+    const { openaiKey, ...baseBotConfig } = config
+    super(baseBotConfig)
     
     this.openai = new OpenAI({
-      apiKey: config.openaiKey
+      apiKey: openaiKey
     })
 
     this.chatHistory = [{
       role: "system",
       content: "You are a helpful AI assistant in a group chat. Keep responses concise and friendly."
     } as ChatCompletionMessageParam]
+  }
+
+  protected async onOnline(): Promise<void> {
+    await super.onOnline()
+    await this.sendMessage(`👋 Hello! I'm ${this.botName}, an AI assistant powered by OpenAI. I'm here to help answer your questions and participate in discussions. Feel free to chat with me!`)
   }
 
   protected async handleMessage(message: string, from: string): Promise<void> {
@@ -58,7 +64,8 @@ export class OpenAIBot extends BaseBot {
         await this.sendMessage(response)
       }
     } catch (error) {
-      console.error('Error processing message:', error)
+      console.error('Error handling message:', error)
+      await this.sendMessage('Sorry, I encountered an error processing your message.')
     }
   }
 } 

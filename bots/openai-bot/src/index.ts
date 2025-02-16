@@ -7,8 +7,18 @@ const bot = new OpenAIBot({
   jid: process.env.BOT_JID!,
   password: process.env.BOT_PASSWORD!,
   roomJid: process.env.ROOM_JID!,
-  openaiKey: process.env.OPENAI_API_KEY!,
-  botName: process.env.BOT_NAME || 'OpenAI Assistant'
+  botName: process.env.BOT_NAME || 'OpenAI Assistant',
+  openaiKey: process.env.OPENAI_API_KEY!
 })
 
-bot.start() 
+async function main() {
+  try {
+    await bot.start()
+    console.log('🤖 OpenAI bot started successfully')
+  } catch (error) {
+    console.error('Failed to start bot:', error)
+    process.exit(1)
+  }
+}
+
+main() 
