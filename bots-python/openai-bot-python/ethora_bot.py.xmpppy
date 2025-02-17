@@ -1,0 +1,258 @@
+import asyncio
+import xmpp
+import openai
+from typing import Optional, List
+import os
+from dotenv import load_dotenv
+import logging
+import logging.handlers
+import ssl
+import datetime
+import time
+import threading
+from urllib.parse import urlparse
+
+class EthoraChatBot:
+    def __init__(self, jid: str, password: str, room_jid: str, openai_key: str, bot_name: str = None, verbose: bool = False):
+        # Logging setup first
+        logging.basicConfig(level=logging.DEBUG if verbose else logging.INFO,
+                          format='%(asctime)s - %(levelname)s - %(message)s')
+        self.logger = logging.getLogger(__name__)
+        
+        # Bot configuration
+        self.jid = xmpp.JID(jid)
+        self.password = password
+        self.room_jid = room_jid
+        self.bot_name = bot_name or "AI Assistant Python"
+        self.message_history: List[dict] = [
+            {"role": "system", "content": "You are a helpful AI assistant in a group chat. Keep responses concise and friendly."}
+        ]
+        
+        # Connection settings
+        self.xmpp_endpoint = os.getenv('XMPP_ENDPOINT', 'wss://xmpp.ethoradev.com:5443/ws')
+        self.logger.info(f"Using XMPP endpoint: {self.xmpp_endpoint}")
+        
+        # Parse the endpoint URL
+        parsed_url = urlparse(self.xmpp_endpoint)
+        self.host = parsed_url.hostname
+        self.port = parsed_url.port or 5443
+        
+        # OpenAI setup
+        self.client = openai.OpenAI(api_key=openai_key)
+        
+        # Initialize XMPP client with debug
+        self.xmpp = xmpp.Client(self.jid.getDomain(), debug=['always'])
+        
+        # Try connecting with debug info
+        self.logger.info(f"Attempting to connect to {self.host}:{self.port}")
+        conn = self.xmpp.connect((self.host, self.port))
+        self.logger.info(f"Connection result: {conn}")
+        
+        if not conn:
+            raise ConnectionError("Could not connect to server")
+        
+        # Register handlers after connection is established
+        if hasattr(self.xmpp, 'RegisterHandler'):
+            self.logger.info("Using direct handler registration")
+            self.xmpp.RegisterHandler('message', self.message_handler)
+            self.xmpp.RegisterHandler('presence', self.presence_handler)
+        elif hasattr(self.xmpp, 'Dispatcher'):
+            self.logger.info("Using Dispatcher handler registration")
+            self.xmpp.Dispatcher.RegisterHandler('message', self.message_handler)
+            self.xmpp.Dispatcher.RegisterHandler('presence', self.presence_handler)
+        elif hasattr(self.xmpp, 'dispatcher'):
+            self.logger.info("Using dispatcher handler registration")
+            self.xmpp.dispatcher.RegisterHandler('message', self.message_handler)
+            self.xmpp.dispatcher.RegisterHandler('presence', self.presence_handler)
+        else:
+            self.logger.warning("Could not register handlers - will try again after authentication")
+        
+        self.logger.info("Bot initialized")
+
+    def disconnect_handler(self):
+        """Handle disconnection"""
+        self.logger.warning("Disconnected from server")
+        return True  # Try to reconnect
+
+    def message_handler(self, conn, msg):
+        """Handle incoming messages"""
+        if msg.getType() == 'groupchat' and msg.getBody():
+            try:
+                from_jid = msg.getFrom()
+                if from_jid.getResource() != self.jid.getNode():
+                    self.logger.info(f"Processing message from {from_jid.getResource()}: {msg.getBody()}")
+                    
+                    # Update message history
+                    self.message_history.append({
+                        "role": "user",
+                        "content": msg.getBody()
+                    })
+                    
+                    # Keep history limited to last 10 messages
+                    if len(self.message_history) > 11:
+                        self.message_history = [
+                            self.message_history[0],  # Keep system message
+                            *self.message_history[-10:]  # Keep last 10 messages
+                        ]
+                    
+                    # Get AI response
+                    response = self.get_ai_response()
+                    if response:
+                        # Add response to history
+                        self.message_history.append({
+                            "role": "assistant",
+                            "content": response
+                        })
+                        
+                        # Send response
+                        self.send_message(response)
+            except Exception as e:
+                self.logger.error(f"Error processing message: {e}", exc_info=True)
+
+    def presence_handler(self, conn, pres):
+        """Handle presence stanzas"""
+        self.logger.info(f"Presence: {pres.getFrom()} - type: {pres.getType()}")
+
+    def get_ai_response(self) -> Optional[str]:
+        """Get response from OpenAI"""
+        try:
+            completion = self.client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=self.message_history,
+                temperature=0.7,
+                max_tokens=150
+            )
+            return completion.choices[0].message.content
+        except Exception as e:
+            self.logger.error(f"OpenAI API error: {e}")
+            return "Sorry, I encountered an error processing your message."
+
+    def send_message(self, message: str):
+        """Send a message to the room"""
+        try:
+            msg = xmpp.Message(to=self.room_jid, body=message, typ='groupchat')
+            self.xmpp.send(msg)
+            self.logger.info(f"Sent message: {message[:50]}...")
+        except Exception as e:
+            self.logger.error(f"Error sending message: {e}", exc_info=True)
+
+    def connect(self):
+        """Connect to the XMPP server"""
+        try:
+            self.logger.info("Connecting to server...")
+            
+            # Authenticate
+            if not self.xmpp.auth(self.jid.getNode(), self.password):
+                raise ConnectionError("Could not authenticate")
+            self.logger.info("Authenticated successfully")
+            
+            # Try registering handlers again if needed
+            if not hasattr(self.xmpp, 'RegisterHandler') and not hasattr(self.xmpp, 'Dispatcher'):
+                if hasattr(self.xmpp, 'dispatcher'):
+                    self.xmpp.dispatcher.RegisterHandler('message', self.message_handler)
+                    self.xmpp.dispatcher.RegisterHandler('presence', self.presence_handler)
+            
+            # Send initial presence
+            self.xmpp.sendInitPresence()
+            self.logger.info("Sent initial presence")
+            
+            # Join the room
+            self.join_room()
+            
+            return True
+        except Exception as e:
+            self.logger.error(f"Connection error: {e}", exc_info=True)
+            return False
+
+    def join_room(self):
+        """Join the MUC room"""
+        try:
+            # Send presence to the room
+            presence = xmpp.Presence(to=f"{self.room_jid}/{self.jid.getNode()}")
+            x = presence.addChild('x', namespace='http://jabber.org/protocol/muc')
+            self.xmpp.send(presence)
+            self.logger.info(f"Joined room: {self.room_jid}")
+            
+            # Send welcome message
+            welcome_msg = f"👋 Hello! I'm {self.bot_name}, ready to help!"
+            self.send_message(welcome_msg)
+        except Exception as e:
+            self.logger.error(f"Error joining room: {e}", exc_info=True)
+
+    def process(self, block=True):
+        """Process incoming XMPP stanzas"""
+        try:
+            if block:
+                while self.xmpp.Process(1):
+                    pass
+            else:
+                self.xmpp.Process(1)
+        except KeyboardInterrupt:
+            self.logger.info("Received keyboard interrupt")
+            return False
+        except Exception as e:
+            self.logger.error(f"Processing error: {e}", exc_info=True)
+            return False
+        return True
+
+def main():
+    load_dotenv()
+    
+    # Set up logging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
+    # Get configuration from environment
+    bot_jid = os.getenv("BOT_JID")
+    bot_password = os.getenv("BOT_PASSWORD")
+    room_jid = os.getenv("ROOM_JID")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    bot_name = os.getenv("BOT_NAME", "AI Assistant Python")
+    
+    # Validate required environment variables
+    required_vars = {
+        "BOT_JID": bot_jid,
+        "BOT_PASSWORD": bot_password,
+        "ROOM_JID": room_jid,
+        "OPENAI_API_KEY": openai_key
+    }
+    
+    missing_vars = [var for var, value in required_vars.items() if not value]
+    if missing_vars:
+        raise ValueError(f"Missing required environment variables: {', '.join(missing_vars)}")
+    
+    # Validate JID format
+    if '@' not in bot_jid or '@' not in room_jid:
+        raise ValueError("Invalid JID format. Both BOT_JID and ROOM_JID must contain '@'")
+    
+    logging.info("Configuration:")
+    logging.info(f"Bot JID: {bot_jid}")
+    logging.info(f"Room JID: {room_jid}")
+    logging.info(f"Bot Name: {bot_name}")
+    
+    try:
+        logging.info("Initializing bot...")
+        bot = EthoraChatBot(
+            jid=bot_jid,
+            password=bot_password,
+            room_jid=room_jid,
+            openai_key=openai_key,
+            bot_name=bot_name,
+            verbose=True
+        )
+        
+        logging.info("Attempting to connect...")
+        if bot.connect():
+            logging.info("Starting message processing...")
+            bot.process(block=True)
+        else:
+            logging.error("Failed to connect")
+            raise ConnectionError("Failed to establish connection")
+    except Exception as e:
+        logging.error(f"Bot error: {e}", exc_info=True)
+        raise
+
+if __name__ == "__main__":
+    main()
