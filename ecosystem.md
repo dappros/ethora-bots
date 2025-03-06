@@ -20,6 +20,10 @@ npm link
 
 ## Bot Configuration
 
+### Ethora API setup 
+Your bot needs an Ethora user account. Also if you have not done so already, you need to create an App in the Ethora Dashboard. Navigate to [Ethora website](https://ethora.com/) -> Admin -> Apps -> Create App. Then proceed to Admin -> Settings -> API. Copy your API key and Secret into your .env file. 
+
+
 ### OpenAI Bot Setup
 ```bash
 cd ../../bots/openai-bot
