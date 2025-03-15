@@ -13,6 +13,7 @@ export interface TestConfig {
   apiUrl: string;
   appId: string;
   apiKey: string;
+  appToken: string;
 
   // Test Configuration
   createNewUsers: boolean;
@@ -32,13 +33,14 @@ export const config: TestConfig = {
   // Bot Configuration
   botJid: process.env.BOT_JID || '',
   botPassword: process.env.BOT_PASSWORD || '',
-  botName: process.env.BOT_NAME || 'Test Bot',
+  botName: process.env.BOT_NAME || 'Ethora Test Bot',
   roomJid: process.env.ROOM_JID,
 
   // API Configuration
-  apiUrl: process.env.API_URL || 'https://api.example.com',
+  apiUrl: process.env.API_URL || 'http://localhost:8080',
   appId: process.env.APP_ID || '',
   apiKey: process.env.API_KEY || '',
+  appToken: process.env.APP_TOKEN || '',
 
   // Test Configuration
   createNewUsers: process.env.CREATE_NEW_USERS === 'true',
@@ -49,7 +51,7 @@ export const config: TestConfig = {
   testFileUrl: process.env.TEST_FILE_URL || 'https://example.com/test.jpg',
 
   // Timeouts and Retries
-  messageWaitTime: parseInt(process.env.MESSAGE_WAIT_TIME || '2000'),
+  messageWaitTime: parseInt(process.env.MESSAGE_WAIT_TIME || '1000'),
   maxRetries: parseInt(process.env.MAX_RETRIES || '3'),
   retryDelay: parseInt(process.env.RETRY_DELAY || '1000'),
 };

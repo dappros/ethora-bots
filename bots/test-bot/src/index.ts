@@ -74,7 +74,7 @@ async function runTests() {
     logger.info('Bot connected successfully');
 
     // Step 4: Run remaining test scenarios
-    await testScenarios.runAllTests();
+    await testScenarios.runTests();
     
     logger.info('Test scenarios completed successfully');
     process.exit(0);
