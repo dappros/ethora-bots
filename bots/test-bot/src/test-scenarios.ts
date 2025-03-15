@@ -4,8 +4,16 @@ import { TestConfig } from './config';
 import { Logger } from 'winston';
 
 interface UserResponse {
+  user: {
+    id: string;
+    xmppPassword: string;
+    walletAddress: string;
+  };
+}
+
+interface BotUser {
   id: string;
-  xmppPassword: string;
+  password: string;
   walletAddress: string;
 }
 
@@ -31,7 +39,7 @@ interface MessageResponse {
 export class TestScenarios {
   private config: TestConfig;
   private logger: Logger;
-  private botUser: { id: string; password: string; walletAddress: string; } | null = null;
+  private botUser: BotUser | null = null;
   private roomJid: string = '';
   private lastMessageId: string = '';
 
@@ -44,27 +52,34 @@ export class TestScenarios {
    * Creates a bot user account
    */
   async createBotUser(): Promise<void> {
+    this.logger.info('Creating bot user account...');
+
+    const email = `${this.config.botName.toLowerCase().replace(/\s+/g, '.')}@ethora.bot`;
+    const [firstName, ...lastNameParts] = this.config.botName.split(' ');
+    const lastName = lastNameParts.length > 0 ? lastNameParts.join(' ') : 'Bot';
+
     try {
-      this.logger.info('Creating bot user account...');
-      const response = await axios.post<UserResponse>(`${this.config.apiUrl}/v1/users`, {
-        appId: this.config.appId,
-        name: this.config.botName
-      }, {
-        headers: { 
-          'Authorization': 'JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InBhcmVudEFwcElkIjpudWxsLCJpc0FsbG93ZWROZXdBcHBDcmVhdGUiOnRydWUsImlzQmFzZUFwcCI6dHJ1ZSwiZ29vZ2xlU2VydmljZXNKc29uIjoiIiwiZ29vZ2xlU2VydmljZUluZm9QbGlzdCI6IiIsIlJFQUNUX0FQUF9TVFJJUEVfUFVCTElTSEFCTEVfS0VZIjoiIiwiUkVBQ1RfQVBQX1NUUklQRV9TRUNSRVRfS0VZIjoiIiwic3RhdHMiOnsidG90YWxSZWdpc3RlcmVkIjowLCJyZWNlbnRseVJlZ2lzdGVyZWQiOjAsInRvdGFsU2Vzc2lvbnMiOjAsInJlY2VudGx5U2Vzc2lvbnMiOjAsInRvdGFsQXBpQ2FsbHMiOjAsInJlY2VudGx5QXBpQ2FsbHMiOjAsInRvdGFsRmlsZXMiOjAsInJlY2VudGx5RmlsZXMiOjAsInRvdGFsVHJhbnNhY3Rpb25zIjowLCJyZWNlbnRseVRyYW5zYWN0aW9ucyI6MCwidG90YWxJc3N1YW5jZSI6MCwicmVjZW50bHlJc3N1YW5jZSI6MH0sInNpZ25vbk9wdGlvbnMiOltdLCJhZnRlckxvZ2luUGFnZSI6ImNoYXRzIiwiYWxsb3dVc2Vyc1RvQ3JlYXRlUm9vbXMiOnRydWUsIl9pZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYiIsImRlZmF1bHRSb29tcyI6W10sImRpc3BsYXlOYW1lIjoiRXRob3JhIiwiZG9tYWluTmFtZSI6ImV0aG9yYSIsImNyZWF0b3JJZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYyIsInVzZXJzQ2FuRnJlZSI6dHJ1ZSwiZGVmYXVsdEFjY2Vzc0Fzc2V0c09wZW4iOnRydWUsImRlZmF1bHRBY2Nlc3NQcm9maWxlT3BlbiI6dHJ1ZSwiYnVuZGxlSWQiOiJjb20uZXRob3JhIiwicHJpbWFyeUNvbG9yIjoiIzAwM0U5QyIsImNvaW5TeW1ib2wiOiJFVE8iLCJjb2luTmFtZSI6IkV0aG9yYSBDb2luIn0sImlhdCI6MTc0MTkzMzY0MX0.UOp3rIVxXMrJHnfpzlzJLE73LoaA3EHl7CfOy6uo8ps'
+      const response = await axios.post<UserResponse>(
+        `${this.config.apiUrl}/v1/users/sign-up-with-email`,
+        {
+          email,
+          firstName,
+          lastName
+        },
+        {
+          headers: {
+            'Authorization': this.config.appToken,
+            'x-app-id': this.config.appId
+          }
         }
-      });
+      );
 
       this.botUser = {
-        id: response.data.id,
-        password: response.data.xmppPassword,
-        walletAddress: response.data.walletAddress
+        id: response.data.user.id,
+        password: response.data.user.xmppPassword,
+        walletAddress: response.data.user.walletAddress
       };
-      
-      this.logger.info('Bot user created successfully', { 
-        userId: this.botUser.id,
-        walletAddress: this.botUser.walletAddress 
-      });
+      this.logger.info('Bot user created successfully', { user: this.botUser });
     } catch (error) {
       this.logger.error('Failed to create bot user', { error });
       throw error;
@@ -83,7 +98,8 @@ export class TestScenarios {
       this.logger.info('Retrieving list of available rooms...');
       const response = await axios.get<RoomListResponse>(`${this.config.apiUrl}/v1/chat/rooms`, {
         headers: { 
-          'Authorization': 'JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InBhcmVudEFwcElkIjpudWxsLCJpc0FsbG93ZWROZXdBcHBDcmVhdGUiOnRydWUsImlzQmFzZUFwcCI6dHJ1ZSwiZ29vZ2xlU2VydmljZXNKc29uIjoiIiwiZ29vZ2xlU2VydmljZUluZm9QbGlzdCI6IiIsIlJFQUNUX0FQUF9TVFJJUEVfUFVCTElTSEFCTEVfS0VZIjoiIiwiUkVBQ1RfQVBQX1NUUklQRV9TRUNSRVRfS0VZIjoiIiwic3RhdHMiOnsidG90YWxSZWdpc3RlcmVkIjowLCJyZWNlbnRseVJlZ2lzdGVyZWQiOjAsInRvdGFsU2Vzc2lvbnMiOjAsInJlY2VudGx5U2Vzc2lvbnMiOjAsInRvdGFsQXBpQ2FsbHMiOjAsInJlY2VudGx5QXBpQ2FsbHMiOjAsInRvdGFsRmlsZXMiOjAsInJlY2VudGx5RmlsZXMiOjAsInRvdGFsVHJhbnNhY3Rpb25zIjowLCJyZWNlbnRseVRyYW5zYWN0aW9ucyI6MCwidG90YWxJc3N1YW5jZSI6MCwicmVjZW50bHlJc3N1YW5jZSI6MH0sInNpZ25vbk9wdGlvbnMiOltdLCJhZnRlckxvZ2luUGFnZSI6ImNoYXRzIiwiYWxsb3dVc2Vyc1RvQ3JlYXRlUm9vbXMiOnRydWUsIl9pZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYiIsImRlZmF1bHRSb29tcyI6W10sImRpc3BsYXlOYW1lIjoiRXRob3JhIiwiZG9tYWluTmFtZSI6ImV0aG9yYSIsImNyZWF0b3JJZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYyIsInVzZXJzQ2FuRnJlZSI6dHJ1ZSwiZGVmYXVsdEFjY2Vzc0Fzc2V0c09wZW4iOnRydWUsImRlZmF1bHRBY2Nlc3NQcm9maWxlT3BlbiI6dHJ1ZSwiYnVuZGxlSWQiOiJjb20uZXRob3JhIiwicHJpbWFyeUNvbG9yIjoiIzAwM0U5QyIsImNvaW5TeW1ib2wiOiJFVE8iLCJjb2luTmFtZSI6IkV0aG9yYSBDb2luIn0sImlhdCI6MTc0MTkzMzY0MX0.UOp3rIVxXMrJHnfpzlzJLE73LoaA3EHl7CfOy6uo8ps'
+          'x-custom-token': this.config.appToken,
+          'x-app-id': this.config.appId
         }
       });
 
@@ -115,7 +131,8 @@ export class TestScenarios {
         roomJid
       }, {
         headers: { 
-          'Authorization': 'JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InBhcmVudEFwcElkIjpudWxsLCJpc0FsbG93ZWROZXdBcHBDcmVhdGUiOnRydWUsImlzQmFzZUFwcCI6dHJ1ZSwiZ29vZ2xlU2VydmljZXNKc29uIjoiIiwiZ29vZ2xlU2VydmljZUluZm9QbGlzdCI6IiIsIlJFQUNUX0FQUF9TVFJJUEVfUFVCTElTSEFCTEVfS0VZIjoiIiwiUkVBQ1RfQVBQX1NUUklQRV9TRUNSRVRfS0VZIjoiIiwic3RhdHMiOnsidG90YWxSZWdpc3RlcmVkIjowLCJyZWNlbnRseVJlZ2lzdGVyZWQiOjAsInRvdGFsU2Vzc2lvbnMiOjAsInJlY2VudGx5U2Vzc2lvbnMiOjAsInRvdGFsQXBpQ2FsbHMiOjAsInJlY2VudGx5QXBpQ2FsbHMiOjAsInRvdGFsRmlsZXMiOjAsInJlY2VudGx5RmlsZXMiOjAsInRvdGFsVHJhbnNhY3Rpb25zIjowLCJyZWNlbnRseVRyYW5zYWN0aW9ucyI6MCwidG90YWxJc3N1YW5jZSI6MCwicmVjZW50bHlJc3N1YW5jZSI6MH0sInNpZ25vbk9wdGlvbnMiOltdLCJhZnRlckxvZ2luUGFnZSI6ImNoYXRzIiwiYWxsb3dVc2Vyc1RvQ3JlYXRlUm9vbXMiOnRydWUsIl9pZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYiIsImRlZmF1bHRSb29tcyI6W10sImRpc3BsYXlOYW1lIjoiRXRob3JhIiwiZG9tYWluTmFtZSI6ImV0aG9yYSIsImNyZWF0b3JJZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYyIsInVzZXJzQ2FuRnJlZSI6dHJ1ZSwiZGVmYXVsdEFjY2Vzc0Fzc2V0c09wZW4iOnRydWUsImRlZmF1bHRBY2Nlc3NQcm9maWxlT3BlbiI6dHJ1ZSwiYnVuZGxlSWQiOiJjb20uZXRob3JhIiwicHJpbWFyeUNvbG9yIjoiIzAwM0U5QyIsImNvaW5TeW1ib2wiOiJFVE8iLCJjb2luTmFtZSI6IkV0aG9yYSBDb2luIn0sImlhdCI6MTc0MTkzMzY0MX0.UOp3rIVxXMrJHnfpzlzJLE73LoaA3EHl7CfOy6uo8ps'
+          'x-custom-token': this.config.appToken,
+          'x-app-id': this.config.appId
         }
       });
 
@@ -141,7 +158,8 @@ export class TestScenarios {
         isPrivate: false
       }, {
         headers: { 
-          'Authorization': 'JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InBhcmVudEFwcElkIjpudWxsLCJpc0FsbG93ZWROZXdBcHBDcmVhdGUiOnRydWUsImlzQmFzZUFwcCI6dHJ1ZSwiZ29vZ2xlU2VydmljZXNKc29uIjoiIiwiZ29vZ2xlU2VydmljZUluZm9QbGlzdCI6IiIsIlJFQUNUX0FQUF9TVFJJUEVfUFVCTElTSEFCTEVfS0VZIjoiIiwiUkVBQ1RfQVBQX1NUUklQRV9TRUNSRVRfS0VZIjoiIiwic3RhdHMiOnsidG90YWxSZWdpc3RlcmVkIjowLCJyZWNlbnRseVJlZ2lzdGVyZWQiOjAsInRvdGFsU2Vzc2lvbnMiOjAsInJlY2VudGx5U2Vzc2lvbnMiOjAsInRvdGFsQXBpQ2FsbHMiOjAsInJlY2VudGx5QXBpQ2FsbHMiOjAsInRvdGFsRmlsZXMiOjAsInJlY2VudGx5RmlsZXMiOjAsInRvdGFsVHJhbnNhY3Rpb25zIjowLCJyZWNlbnRseVRyYW5zYWN0aW9ucyI6MCwidG90YWxJc3N1YW5jZSI6MCwicmVjZW50bHlJc3N1YW5jZSI6MH0sInNpZ25vbk9wdGlvbnMiOltdLCJhZnRlckxvZ2luUGFnZSI6ImNoYXRzIiwiYWxsb3dVc2Vyc1RvQ3JlYXRlUm9vbXMiOnRydWUsIl9pZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYiIsImRlZmF1bHRSb29tcyI6W10sImRpc3BsYXlOYW1lIjoiRXRob3JhIiwiZG9tYWluTmFtZSI6ImV0aG9yYSIsImNyZWF0b3JJZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYyIsInVzZXJzQ2FuRnJlZSI6dHJ1ZSwiZGVmYXVsdEFjY2Vzc0Fzc2V0c09wZW4iOnRydWUsImRlZmF1bHRBY2Nlc3NQcm9maWxlT3BlbiI6dHJ1ZSwiYnVuZGxlSWQiOiJjb20uZXRob3JhIiwicHJpbWFyeUNvbG9yIjoiIzAwM0U5QyIsImNvaW5TeW1ib2wiOiJFVE8iLCJjb2luTmFtZSI6IkV0aG9yYSBDb2luIn0sImlhdCI6MTc0MTkzMzY0MX0.UOp3rIVxXMrJHnfpzlzJLE73LoaA3EHl7CfOy6uo8ps'
+          'x-custom-token': this.config.appToken,
+          'x-app-id': this.config.appId
         }
       });
 
@@ -173,7 +191,8 @@ export class TestScenarios {
 
       const response = await axios.post<MessageResponse>(`${this.config.apiUrl}/v1/chat/message`, payload, {
         headers: { 
-          'Authorization': 'JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InBhcmVudEFwcElkIjpudWxsLCJpc0FsbG93ZWROZXdBcHBDcmVhdGUiOnRydWUsImlzQmFzZUFwcCI6dHJ1ZSwiZ29vZ2xlU2VydmljZXNKc29uIjoiIiwiZ29vZ2xlU2VydmljZUluZm9QbGlzdCI6IiIsIlJFQUNUX0FQUF9TVFJJUEVfUFVCTElTSEFCTEVfS0VZIjoiIiwiUkVBQ1RfQVBQX1NUUklQRV9TRUNSRVRfS0VZIjoiIiwic3RhdHMiOnsidG90YWxSZWdpc3RlcmVkIjowLCJyZWNlbnRseVJlZ2lzdGVyZWQiOjAsInRvdGFsU2Vzc2lvbnMiOjAsInJlY2VudGx5U2Vzc2lvbnMiOjAsInRvdGFsQXBpQ2FsbHMiOjAsInJlY2VudGx5QXBpQ2FsbHMiOjAsInRvdGFsRmlsZXMiOjAsInJlY2VudGx5RmlsZXMiOjAsInRvdGFsVHJhbnNhY3Rpb25zIjowLCJyZWNlbnRseVRyYW5zYWN0aW9ucyI6MCwidG90YWxJc3N1YW5jZSI6MCwicmVjZW50bHlJc3N1YW5jZSI6MH0sInNpZ25vbk9wdGlvbnMiOltdLCJhZnRlckxvZ2luUGFnZSI6ImNoYXRzIiwiYWxsb3dVc2Vyc1RvQ3JlYXRlUm9vbXMiOnRydWUsIl9pZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYiIsImRlZmF1bHRSb29tcyI6W10sImRpc3BsYXlOYW1lIjoiRXRob3JhIiwiZG9tYWluTmFtZSI6ImV0aG9yYSIsImNyZWF0b3JJZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYyIsInVzZXJzQ2FuRnJlZSI6dHJ1ZSwiZGVmYXVsdEFjY2Vzc0Fzc2V0c09wZW4iOnRydWUsImRlZmF1bHRBY2Nlc3NQcm9maWxlT3BlbiI6dHJ1ZSwiYnVuZGxlSWQiOiJjb20uZXRob3JhIiwicHJpbWFyeUNvbG9yIjoiIzAwM0U5QyIsImNvaW5TeW1ib2wiOiJFVE8iLCJjb2luTmFtZSI6IkV0aG9yYSBDb2luIn0sImlhdCI6MTc0MTkzMzY0MX0.UOp3rIVxXMrJHnfpzlzJLE73LoaA3EHl7CfOy6uo8ps'
+          'x-custom-token': this.config.appToken,
+          'x-app-id': this.config.appId
         }
       });
 
@@ -199,7 +218,8 @@ export class TestScenarios {
 
       await axios.post(`${this.config.apiUrl}/v1/chat/attachment`, formData, {
         headers: {
-          'Authorization': 'JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InBhcmVudEFwcElkIjpudWxsLCJpc0FsbG93ZWROZXdBcHBDcmVhdGUiOnRydWUsImlzQmFzZUFwcCI6dHJ1ZSwiZ29vZ2xlU2VydmljZXNKc29uIjoiIiwiZ29vZ2xlU2VydmljZUluZm9QbGlzdCI6IiIsIlJFQUNUX0FQUF9TVFJJUEVfUFVCTElTSEFCTEVfS0VZIjoiIiwiUkVBQ1RfQVBQX1NUUklQRV9TRUNSRVRfS0VZIjoiIiwic3RhdHMiOnsidG90YWxSZWdpc3RlcmVkIjowLCJyZWNlbnRseVJlZ2lzdGVyZWQiOjAsInRvdGFsU2Vzc2lvbnMiOjAsInJlY2VudGx5U2Vzc2lvbnMiOjAsInRvdGFsQXBpQ2FsbHMiOjAsInJlY2VudGx5QXBpQ2FsbHMiOjAsInRvdGFsRmlsZXMiOjAsInJlY2VudGx5RmlsZXMiOjAsInRvdGFsVHJhbnNhY3Rpb25zIjowLCJyZWNlbnRseVRyYW5zYWN0aW9ucyI6MCwidG90YWxJc3N1YW5jZSI6MCwicmVjZW50bHlJc3N1YW5jZSI6MH0sInNpZ25vbk9wdGlvbnMiOltdLCJhZnRlckxvZ2luUGFnZSI6ImNoYXRzIiwiYWxsb3dVc2Vyc1RvQ3JlYXRlUm9vbXMiOnRydWUsIl9pZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYiIsImRlZmF1bHRSb29tcyI6W10sImRpc3BsYXlOYW1lIjoiRXRob3JhIiwiZG9tYWluTmFtZSI6ImV0aG9yYSIsImNyZWF0b3JJZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYyIsInVzZXJzQ2FuRnJlZSI6dHJ1ZSwiZGVmYXVsdEFjY2Vzc0Fzc2V0c09wZW4iOnRydWUsImRlZmF1bHRBY2Nlc3NQcm9maWxlT3BlbiI6dHJ1ZSwiYnVuZGxlSWQiOiJjb20uZXRob3JhIiwicHJpbWFyeUNvbG9yIjoiIzAwM0U5QyIsImNvaW5TeW1ib2wiOiJFVE8iLCJjb2luTmFtZSI6IkV0aG9yYSBDb2luIn0sImlhdCI6MTc0MTkzMzY0MX0.UOp3rIVxXMrJHnfpzlzJLE73LoaA3EHl7CfOy6uo8ps'
+          'x-custom-token': this.config.appToken,
+          'x-app-id': this.config.appId
         }
       });
 
@@ -218,7 +238,8 @@ export class TestScenarios {
     try {
       const response = await axios.get(`${this.config.apiUrl}/v1/users/${userId}`, {
         headers: { 
-          'Authorization': 'JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7InBhcmVudEFwcElkIjpudWxsLCJpc0FsbG93ZWROZXdBcHBDcmVhdGUiOnRydWUsImlzQmFzZUFwcCI6dHJ1ZSwiZ29vZ2xlU2VydmljZXNKc29uIjoiIiwiZ29vZ2xlU2VydmljZUluZm9QbGlzdCI6IiIsIlJFQUNUX0FQUF9TVFJJUEVfUFVCTElTSEFCTEVfS0VZIjoiIiwiUkVBQ1RfQVBQX1NUUklQRV9TRUNSRVRfS0VZIjoiIiwic3RhdHMiOnsidG90YWxSZWdpc3RlcmVkIjowLCJyZWNlbnRseVJlZ2lzdGVyZWQiOjAsInRvdGFsU2Vzc2lvbnMiOjAsInJlY2VudGx5U2Vzc2lvbnMiOjAsInRvdGFsQXBpQ2FsbHMiOjAsInJlY2VudGx5QXBpQ2FsbHMiOjAsInRvdGFsRmlsZXMiOjAsInJlY2VudGx5RmlsZXMiOjAsInRvdGFsVHJhbnNhY3Rpb25zIjowLCJyZWNlbnRseVRyYW5zYWN0aW9ucyI6MCwidG90YWxJc3N1YW5jZSI6MCwicmVjZW50bHlJc3N1YW5jZSI6MH0sInNpZ25vbk9wdGlvbnMiOltdLCJhZnRlckxvZ2luUGFnZSI6ImNoYXRzIiwiYWxsb3dVc2Vyc1RvQ3JlYXRlUm9vbXMiOnRydWUsIl9pZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYiIsImRlZmF1bHRSb29tcyI6W10sImRpc3BsYXlOYW1lIjoiRXRob3JhIiwiZG9tYWluTmFtZSI6ImV0aG9yYSIsImNyZWF0b3JJZCI6IjY3ZDNjYzQ1YjUwMThiOTg3MmMxNmEwYyIsInVzZXJzQ2FuRnJlZSI6dHJ1ZSwiZGVmYXVsdEFjY2Vzc0Fzc2V0c09wZW4iOnRydWUsImRlZmF1bHRBY2Nlc3NQcm9maWxlT3BlbiI6dHJ1ZSwiYnVuZGxlSWQiOiJjb20uZXRob3JhIiwicHJpbWFyeUNvbG9yIjoiIzAwM0U5QyIsImNvaW5TeW1ib2wiOiJFVE8iLCJjb2luTmFtZSI6IkV0aG9yYSBDb2luIn0sImlhdCI6MTc0MTkzMzY0MX0.UOp3rIVxXMrJHnfpzlzJLE73LoaA3EHl7CfOy6uo8ps'
+          'x-custom-token': this.config.appToken,
+          'x-app-id': this.config.appId
         }
       });
 
@@ -232,7 +253,7 @@ export class TestScenarios {
   /**
    * Runs all test scenarios in sequence
    */
-  async runAllTests(): Promise<void> {
+  async runTests(): Promise<void> {
     try {
       this.logger.info('Starting test scenarios...');
 
@@ -242,22 +263,20 @@ export class TestScenarios {
         throw new Error('Failed to create bot user');
       }
 
-      // Step 2: List available rooms
-      const rooms = await this.listRooms();
-      if (rooms.length === 0) {
-        this.logger.warn('No rooms available, creating a new one...');
-        this.roomJid = await this.createRoom(this.botUser.id);
+      // Step 2: Create or join room
+      if (this.config.createNewRoom) {
+        await this.createRoom(this.botUser.id);
       } else {
-        // Join the first available room
-        await this.joinRoom(rooms[0].jid);
+        await this.listRooms();
       }
 
       // Step 3: Send test messages
       await this.sendMessage(this.botUser.id, 'Hello! I am a test bot 🤖');
       await new Promise(resolve => setTimeout(resolve, this.config.messageWaitTime));
 
-      // Step 4: Send a file attachment
+      // Step 4: Send file attachment
       await this.sendFileAttachment(this.botUser.id, this.config.testFileUrl);
+      await new Promise(resolve => setTimeout(resolve, this.config.messageWaitTime));
 
       this.logger.info('All test scenarios completed successfully');
     } catch (error) {
