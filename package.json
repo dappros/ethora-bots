@@ -8,5 +8,8 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "dev": "npm run dev --workspaces"
+  },
+  "dependencies": {
+    "@babel/helpers": "^7.26.10"
   }
-} 
+}
