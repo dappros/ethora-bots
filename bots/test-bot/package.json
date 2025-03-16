@@ -11,9 +11,11 @@
   },
   "dependencies": {
     "@ethora/bot-core": "file:../../packages/bot-core",
+    "@types/jsonwebtoken": "^9.0.9",
     "axios": "^1.6.7",
     "dotenv": "^16.4.5",
     "form-data": "^4.0.0",
+    "jsonwebtoken": "^9.0.2",
     "winston": "^3.11.0"
   },
   "devDependencies": {

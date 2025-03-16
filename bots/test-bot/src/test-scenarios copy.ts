@@ -100,7 +100,7 @@ export class TestScenarios {
         {
           headers: {
             'Content-Type': 'application/json',
-            'x-custom-token': `JWT ${this.createServerToken()}`,
+            'x-custom-token': `Bearer ${this.createServerToken()}`,
             'x-app-id': this.config.appId
           }
         }
