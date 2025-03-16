@@ -60,20 +60,26 @@ async function runTests() {
 
     const botUser = testScenarios.getBotUser()!;
 
-    // Step 2: Initialize bot with created user credentials
+    // Step 2: Create room if needed
+    let roomJid = '';
+    if (config.createNewRoom) {
+      roomJid = await testScenarios.createRoom(botUser.id);
+    }
+
+    // Step 3: Initialize bot with created user credentials
     const bot = new TestBot({
-      jid: `${botUser.id}@dev.xmpp.ethoradev.com`,
+      jid: `${config.appId}_${botUser.id}@dev.xmpp.ethoradev.com`,
       password: botUser.password,
       botName: config.botName,
-      roomJid: config.roomJid || '',
+      roomJid: roomJid,
       xmppEndpoint: 'wss://dev.xmpp.ethoradev.com:5443/ws'
     }, logger);
 
-    // Step 3: Connect to XMPP
+    // Step 4: Connect to XMPP
     await bot.start();
     logger.info('Bot connected successfully');
 
-    // Step 4: Run remaining test scenarios
+    // Step 5: Run remaining test scenarios
     await testScenarios.runTests();
     
     logger.info('Test scenarios completed successfully');
