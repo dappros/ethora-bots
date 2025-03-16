@@ -191,15 +191,13 @@ export class TestScenarios {
       const randomStr = Math.random().toString(36).substring(2, 8);
       const roomJid = `testroom_${timestamp}_${randomStr}@conference.dev.xmpp.ethoradev.com`;
 
-      const response = await axios.post<RoomResponse>(`${this.config.apiUrl}/v1/chat/room`, {
+      const response = await axios.post<RoomResponse>(`${this.config.apiUrl}/v1/room`, {
         name: 'Test Room',
         description: 'Room for automated testing',
-        userId,
-        isPrivate: false,
         roomJid
       }, {
         headers: { 
-          'Authorization': this.botUser?.accessToken || '',
+          'x-custom-token': `JWT ${this.createServerToken()}`,
           'x-app-id': this.config.appId
         }
       });
