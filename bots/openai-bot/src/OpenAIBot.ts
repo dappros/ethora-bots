@@ -29,7 +29,7 @@ export class OpenAIBot extends BaseBot {
     await this.sendMessage(`👋 Hello! I'm ${this.botName}, an AI assistant powered by OpenAI. I'm here to help answer your questions and participate in discussions. Feel free to chat with me!`)
   }
 
-  protected async onMessage(message: string, from: string): Promise<void> {
+  protected async onMessage(from: string, message: string): Promise<void> {
     try {
       // Add user message to history
       this.chatHistory.push({
@@ -49,7 +49,8 @@ export class OpenAIBot extends BaseBot {
       const completion = await this.openai.chat.completions.create({
         messages: this.chatHistory,
         model: "gpt-3.5-turbo",
-        temperature: 0.7
+        temperature: 0.7,
+        max_tokens: 500
       })
 
       const response = completion.choices[0].message.content
@@ -65,7 +66,7 @@ export class OpenAIBot extends BaseBot {
       }
     } catch (error) {
       console.error('Error handling message:', error)
-      await this.sendMessage('Sorry, I encountered an error processing your message.')
+      await this.sendMessage('Sorry, I encountered an error processing your message. Please try again.')
     }
   }
 } 
