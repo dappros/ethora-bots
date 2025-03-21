@@ -1,8 +1,8 @@
-import { BaseBot, BaseBotConfig } from '@ethora/bot-core'
+import { BaseBot, BotConfig } from '@ethora/bot-core'
 import OpenAI from 'openai'
 import { ChatCompletionMessageParam } from 'openai/resources/chat/completions'
 
-export interface OpenAIBotConfig extends BaseBotConfig {
+export interface OpenAIBotConfig extends BotConfig {
   openaiKey: string
 }
 
@@ -29,7 +29,7 @@ export class OpenAIBot extends BaseBot {
     await this.sendMessage(`👋 Hello! I'm ${this.botName}, an AI assistant powered by OpenAI. I'm here to help answer your questions and participate in discussions. Feel free to chat with me!`)
   }
 
-  protected async handleMessage(message: string, from: string): Promise<void> {
+  protected async onMessage(message: string, from: string): Promise<void> {
     try {
       // Add user message to history
       this.chatHistory.push({

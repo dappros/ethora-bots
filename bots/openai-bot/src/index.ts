@@ -9,7 +9,7 @@ const bot = new OpenAIBot({
   roomJid: process.env.ROOM_JID!,
   botName: process.env.BOT_NAME || 'OpenAI Assistant',
   openaiKey: process.env.OPENAI_API_KEY!,
-  xmppEndpoint: process.env.XMPP_ENDPOINT || 'wss://xmpp.ethoradev.com:5443/ws'
+  xmppWebsocketUrl: process.env.XMPP_ENDPOINT || 'wss://xmpp.ethoradev.com:5443/ws'
 })
 
 async function main() {

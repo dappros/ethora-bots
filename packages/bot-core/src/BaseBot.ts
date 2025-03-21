@@ -1,108 +1,192 @@
 import { client as xmppClient, xml } from '@xmpp/client'
 import debug from '@xmpp/debug'
 import { Client } from '@xmpp/client-core'
+import { EventEmitter } from 'events'
+import xmpp from '@xmpp/client'
 
-export interface BaseBotConfig {
+export interface BotConfig {
   jid: string
+  xmppWebsocketUrl: string
   password: string
   roomJid: string
   botName: string
-  xmppEndpoint: string
 }
 
-export interface XMPPStanza {
-  is: (type: string) => boolean
-  attrs: Record<string, string>
-  getChild: (name: string) => { text: () => string } | null
-}
-
-export abstract class BaseBot {
-  protected client: Client
+export abstract class BaseBot extends EventEmitter {
+  protected config: BotConfig
+  protected xmppClient: Client
   protected roomJid: string
   protected botName: string
 
-  constructor(config: BaseBotConfig) {
-    this.roomJid = config.roomJid
-    this.botName = config.botName
+  constructor(config: BotConfig) {
+    super();
+    this.config = config;
+    this.roomJid = config.roomJid;
+    this.botName = config.botName;
+    const [username, domain] = config.jid.split('@');
 
-    this.client = xmppClient({
-      service: config.xmppEndpoint,
-      username: config.jid.split('@')[0],
+    console.log('🤖 Creating bot instance:', {
+      jid: config.jid,
+      xmppWebsocketUrl: config.xmppWebsocketUrl,
+      roomJid: config.roomJid,
+      botName: config.botName,
+      username,
+      domain,
+      password: config.password.substring(0, 3) + '...' + config.password.substring(config.password.length - 3)
+    });
+
+    const wsUrl = config.xmppWebsocketUrl.replace('ws://', 'wss://').replace(/\/?$/, '/ws');
+    console.log('🔌 WebSocket URL:', wsUrl);
+
+    this.xmppClient = xmpp.client({
+      service: wsUrl,
+      username: username,
       password: config.password,
-    })
+      domain: domain,
+      resource: 'bot'
+    });
 
-    this.client.on('online', () => this.onOnline())
-    this.client.on('error', (err: Error) => console.error('❌ Error:', err))
-    this.client.on('stanza', (stanza: XMPPStanza) => this.onStanza(stanza))
+    this.xmppClient.on('connect', () => {
+      console.log('🔄 XMPP client connecting...');
+    });
 
-    debug(this.client, true)
+    this.xmppClient.on('online', () => {
+      console.log('🟢 XMPP client online:', {
+        jid: this.xmppClient.jid?.toString(),
+        resource: this.xmppClient.jid?.getResource(),
+        local: this.xmppClient.jid?.getLocal(),
+        domain: this.xmppClient.jid?.getDomain(),
+      });
+      this.onOnline();
+    });
+
+    this.xmppClient.on('error', (err: Error) => {
+      console.error('❌ XMPP client error:', {
+        error: err.message,
+        stack: err.stack,
+        name: err.name,
+      });
+    });
+
+    this.xmppClient.on('offline', () => {
+      console.log('🔴 XMPP client offline');
+    });
+
+    this.xmppClient.on('stanza', (stanza: any) => {
+      console.log('📨 XMPP stanza received:', {
+        name: stanza.name,
+        attrs: stanza.attrs,
+        children: stanza.children.map((child: any) => ({
+          name: child.name,
+          attrs: child.attrs,
+          text: child.children?.[0],
+        })),
+      });
+
+      if (stanza.is('features')) {
+        const mechanisms = stanza.getChild('mechanisms');
+        if (mechanisms) {
+          console.log('🔐 Available SASL mechanisms:', {
+            mechanisms: mechanisms.children.map((m: any) => m.children[0]),
+          });
+
+          const auth = xml(
+            'auth',
+            { xmlns: 'urn:ietf:params:xml:ns:xmpp-sasl', mechanism: 'PLAIN' },
+            Buffer.from(`\x00${username}\x00${config.password}`).toString('base64')
+          );
+          console.log('🔑 Sending SASL PLAIN auth:', {
+            username,
+            base64: Buffer.from(`\x00${username}\x00${config.password}`).toString('base64'),
+          });
+          this.xmppClient.send(auth);
+        }
+      }
+
+      if (stanza.is('failure')) {
+        console.error('❌ Authentication failure:', {
+          condition: stanza.getChild('not-authorized')?.name,
+          text: stanza.getChildText('text'),
+          username,
+          password: config.password.substring(0, 3) + '...' + config.password.substring(config.password.length - 3)
+        });
+      }
+
+      this.onStanza(stanza);
+    });
+
+    debug(this.xmppClient, true)
   }
 
   async start() {
     try {
-      await this.client.start()
+      console.log('🚀 Starting XMPP client...');
+      await this.xmppClient.start()
       console.log('🟢 Bot connected')
-    } catch (err) {
-      console.error('Failed to start:', err)
+    } catch (err: any) {
+      console.error('❌ Error starting bot:', {
+        error: err.message,
+        stack: err.stack,
+        name: err.name,
+      })
+      throw err
     }
   }
 
   protected async sendMessage(message: string) {
+    console.log('📤 Sending message:', {
+      to: this.roomJid,
+      message
+    });
+
     const stanza = xml(
       'message',
-      { 
-        to: this.roomJid,
-        type: 'groupchat',
-      },
-      xml('body', {}, message),
-      xml('data', { 
-        xmlns: 'jabber:client',
-        fullName: this.botName,
-        senderFirstName: this.botName,
-        senderLastName: 'AI',
-        showInChannel: 'true'
-      })
+      { to: this.roomJid, type: 'groupchat' },
+      xml('body', {}, message)
     )
     
-    await this.client.send(stanza)
+    await this.xmppClient.send(stanza)
   }
 
   protected async onOnline() {
-    console.log('🟢 Bot is online')
-    
+    console.log('🎯 Joining room:', this.roomJid);
+
     const presence = xml(
       'presence',
-      { to: `${this.roomJid}/${this.client.jid!.local}` },
+      { to: `${this.roomJid}/${this.xmppClient.jid!.local}` },
       xml('x', { xmlns: 'http://jabber.org/protocol/muc' }),
       xml('data', { 
-        xmlns: 'jabber:client',
-        fullName: this.botName,
-        senderFirstName: this.botName,
-        senderLastName: 'AI',
-        showInChannel: 'true'
+        xmlns: 'http://jabber.org/protocol/muc#user',
+        type: 'bot',
+        name: this.botName
       })
     )
     
-    await this.client.send(presence)
-    console.log('🎯 Joined room:', this.roomJid)
+    await this.xmppClient.send(presence)
+    console.log('✅ Joined room:', this.roomJid)
   }
 
-  protected abstract handleMessage(message: string, from: string): Promise<void>
-
-  private async onStanza(stanza: XMPPStanza) {
+  protected onStanza(stanza: any) {
     if (stanza.is('message') && stanza.attrs.type === 'groupchat') {
       const body = stanza.getChild('body')
       if (body) {
-        const messageText = body.text()
-        const from = stanza.attrs.from
+        const from = stanza.attrs.from.split('/')[1]
+        const message = body.text()
         
         // Don't respond to our own messages
-        if (from.includes(this.client.jid!.local)) {
+        if (from.includes(this.xmppClient.jid!.local)) {
           return
         }
 
-        await this.handleMessage(messageText, from)
+        console.log('📩 Received message:', {
+          from,
+          message
+        });
+
+        this.onMessage(from, message)
       }
     }
   }
+
+  protected abstract onMessage(from: string, message: string): void;
 } 

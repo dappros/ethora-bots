@@ -10,7 +10,8 @@
   "dependencies": {
     "@babel/helpers": "^7.26.10",
     "@xmpp/client": "^0.13.1",
-    "@xmpp/debug": "^0.13.0"
+    "@xmpp/debug": "^0.13.0",
+    "@xmpp/sasl-plain": "^0.13.2"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
