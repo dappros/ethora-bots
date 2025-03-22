@@ -123,6 +123,46 @@ pm2 startup
 pm2 save
 ```
 
+### Running Persistently and Auto-Restart
+
+To ensure your bot runs persistently and automatically starts after server reboots:
+
+1. Start the bot with PM2:
+```bash
+cd bots/openai-bot  # or your specific bot directory
+pm2 start npm --name "ethora-openai-bot" -- start
+```
+
+2. Save the current process list:
+```bash
+pm2 save
+```
+
+3. Generate startup script (the command output will show a command to run with sudo):
+```bash
+pm2 startup
+```
+
+4. Run the command that was displayed (example for Ubuntu):
+```bash
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+```
+
+Now your bot will:
+- Automatically restart if it crashes
+- Start automatically when the server reboots
+- Run persistently in the background
+
+You can verify the setup by:
+- Checking the process list: `pm2 list`
+- Rebooting the server and confirming the bot starts automatically
+- Monitoring the logs: `pm2 logs ethora-openai-bot`
+
+To remove the auto-startup configuration:
+```bash
+pm2 unstartup systemd
+```
+
 ### Monitoring and Maintenance
 
 - View bot logs:
