@@ -1,16 +1,20 @@
-import { BaseBot, BaseBotConfig } from '@ethora/bot-core';
-import { Logger } from 'winston';
+import { BaseBot, BotConfig } from '@ethora/bot-core';
+import winston from 'winston';
 
 export class TestBot extends BaseBot {
-  private logger: Logger;
+  private logger: winston.Logger;
 
-  constructor(config: BaseBotConfig, logger: Logger) {
+  constructor(config: BotConfig, logger: winston.Logger) {
     super(config);
     this.logger = logger;
   }
 
-  protected async handleMessage(message: string, from: string): Promise<void> {
-    this.logger.info('Received message', { message, from });
-    // We don't need to respond to messages in test bot
+  protected onMessage(from: string, message: string): void {
+    this.logger.info(`Received message from ${from}: ${message}`);
+    
+    // Echo the message back
+    this.sendMessage(`Echo: ${message}`).catch(err => {
+      this.logger.error('Failed to send message:', err);
+    });
   }
 } 

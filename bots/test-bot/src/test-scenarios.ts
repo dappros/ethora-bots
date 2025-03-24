@@ -202,20 +202,25 @@ export class TestScenarios {
         domain: this.config.xmppDomain,
         resource: 'test-bot',
         service: this.config.xmppEndpoint,
-        username: `${this.botUser.id}@${this.config.xmppDomain}`
+        username: `${this.config.appId}_${this.botUser.id}`
       });
 
       this.client = xmppClient({
         service: this.config.xmppEndpoint,
         domain: this.config.xmppDomain,
         resource: 'test-bot',
-        username: `${this.botUser.id}@${this.config.xmppDomain}`,
+        username: `${this.config.appId}_${this.botUser.id}`,
         password: this.botUser.xmppPassword
       });
 
       // Set up event handlers
       this.client.on('error', (err: Error) => {
-        this.logger.error('XMPP client error', { error: err });
+        this.logger.error('XMPP client error', { 
+          error: err,
+          errorMessage: err.message,
+          errorStack: err.stack,
+          errorName: err.name
+        });
       });
 
       this.client.on('online', (jid: string) => {
@@ -287,16 +292,20 @@ export class TestScenarios {
       const roomName = `Test Room ${uuidv4()}`;
       this.logger.info('Creating new room...', { roomName });
 
+      const serverToken = await this.createServerToken();
+      this.logger.info('Generated server token for room creation', { serverToken });
+
       const response = await axios.post<RoomResponse>(
-        `${this.config.apiUrl}/v1/chat/room`,
+        `${this.config.apiUrl}/v1/chats`,
         {
-          name: roomName,
+          title: roomName,
           description: 'A test room created by the test bot',
-          userId: this.botUser.id
+          type: 'public'
         },
         {
           headers: {
-            'Authorization': this.botUser.accessToken,
+            'x-custom-token': `Bearer ${serverToken}`,
+            'Content-Type': 'application/json',
             'x-app-id': this.config.appId
           }
         }
