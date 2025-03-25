@@ -1,224 +1,164 @@
 # Ethora Test Bot
 
-An automated testing bot for verifying core functionalities of the Ethora platform.
-
-## Test Scenarios
-
-The bot executes the following test scenarios in sequence:
-
-### 1. User Creation and Authentication
-- Creates a new bot user account via platform API
-- Logs user ID, wallet address, and XMPP credentials
-- Verifies successful user creation
-
-### 2. XMPP Connection
-- Connects to XMPP server using generated credentials
-- Verifies successful connection
-- Logs connection status and any errors
-
-### 3. Room Management
-- Retrieves list of available chat rooms
-- Logs room details (JIDs, names, participant counts)
-- If no rooms available:
-  - Creates a new test room
-  - Verifies room creation
-  - Logs room JID and details
-- If rooms exist:
-  - Joins the first available room
-  - Verifies successful room join
-  - Logs room access status
-
-### 4. Message Testing
-- Sends initial test message to room
-- Verifies message delivery
-- Logs message ID and timestamp
-- Waits for configured delay
-- Sends a file attachment
-- Verifies file upload and attachment
-- Logs attachment details
-
-## Logging
-
-The bot provides comprehensive logging at multiple levels:
-
-### Console Output
-- Real-time execution progress
-- Colorized log levels (DEBUG, INFO, WARN, ERROR)
-- Structured data output for complex objects
-- Timestamps for all operations
-
-### Log Files
-1. Main Log (`logs/test-bot.log`):
-   - All operations and their outcomes
-   - Detailed request/response data
-   - Timestamps and durations
-   - Rotates at 5MB, keeps 5 files
-
-2. Error Log (`logs/error.log`):
-   - Dedicated error tracking
-   - Full stack traces
-   - Error context and metadata
-
-## Configuration
-
-Create a `.env` file with the following settings:
-
-```bash
-# Bot Configuration
-BOT_JID=testbot@dev.xmpp.ethoradev.com
-BOT_PASSWORD=testbot123
-BOT_NAME=Ethora Test Bot
-
-# API Configuration
-API_URL=https://api.ethoradev.com
-APP_ID=your_app_id
-API_KEY=your_api_key
-
-# Test Configuration
-CREATE_NEW_USERS=true
-CREATE_NEW_ROOM=true
-TEST_FILE_URL=https://picsum.photos/200/300
-
-# Timeouts and Retries
-MESSAGE_WAIT_TIME=2000
-MAX_RETRIES=3
-RETRY_DELAY=1000
-```
-
-## Running Tests
-
-1. Install dependencies:
-```bash
-npm install
-```
-
-2. Run in development mode (with real-time TypeScript compilation):
-```bash
-npm run dev
-```
-
-3. Build and run in production:
-```bash
-npm run build
-npm start
-```
-
-## Log Output Example
-
-```
-2024-03-14T20:55:23.456Z [INFO]: Starting test scenarios...
-2024-03-14T20:55:23.458Z [INFO]: Creating bot user account...
-2024-03-14T20:55:24.123Z [INFO]: Bot user created successfully
-{
-  "userId": "123456",
-  "walletAddress": "0x..."
-}
-2024-03-14T20:55:24.234Z [INFO]: Bot connected to XMPP server
-2024-03-14T20:55:24.345Z [INFO]: Retrieved room list
-{
-  "roomCount": 3,
-  "rooms": [
-    {"name": "Test Room", "jid": "room@conference..."}
-  ]
-}
-...
-```
-
-## Error Handling
-
-The bot handles various error scenarios:
-- API connection failures
-- XMPP connection issues
-- Room access problems
-- Message delivery failures
-- File upload errors
-
-All errors are:
-1. Logged with full context
-2. Retried according to configuration
-3. Reported with clear error messages
-4. Tracked in the error log file
+A comprehensive test bot for the Ethora platform that validates various chat room functionalities and XMPP integration.
 
 ## Features
 
-- Automated testing of core platform features
-- Configurable test scenarios
-- Detailed logging and error reporting
-- Support for existing or new test users/rooms
-- File attachment testing
-- Message threading verification
+The test bot performs the following operations:
 
-## Setup
+1. User Management:
+   - Creates a bot user account with unique credentials
+   - Generates server tokens for authentication
+   - Handles XMPP client initialization
 
-1. Install dependencies:
+2. Room Management:
+   - Creates new chat rooms
+   - Joins existing rooms
+   - Lists available rooms
+   - Updates room settings
+   - Manages room participants
+
+3. Message Operations:
+   - Sends text messages
+   - Sends messages with mentions
+   - Sends messages with links
+   - Sends file attachments (images, documents)
+   - Reacts to messages with emojis
+   - Edits messages
+   - Replies to messages
+   - Deletes messages
+
+4. Cleanup Operations:
+   - Finds all test users and rooms
+   - Lists test data for review
+   - Confirms deletion with user
+   - Removes test users and rooms
+   - Logs cleanup results
+
+## Prerequisites
+
+- Node.js (v14 or higher)
+- npm (v6 or higher)
+- Access to Ethora platform API
+- XMPP server access
+
+## Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd ethora-bots/bots/test-bot
+```
+
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Create environment configuration:
-```bash
-cp .env.example .env
+3. Create a `.env` file in the test-bot directory with the following configuration:
+```env
+API_URL=https://dev.api.ethoradev.com
+APP_ID=your_app_id
+APP_TOKEN=your_app_token
+XMPP_DOMAIN=dev.xmpp.ethoradev.com
+XMPP_ENDPOINT=wss://dev.xmpp.ethoradev.com:5443/ws
+TEST_FILE_URL=https://example.com/test-file.jpg
 ```
 
-3. Update the `.env` file with your configuration:
-- Bot credentials
-- API endpoints
-- Test parameters
-- Existing user/room details (if not creating new ones)
+## Configuration
+
+The bot can be configured through environment variables or command-line arguments:
+
+- `API_URL`: The base URL of the Ethora API
+- `APP_ID`: Your application ID
+- `APP_TOKEN`: Your application token
+- `XMPP_DOMAIN`: The XMPP server domain
+- `XMPP_ENDPOINT`: The WebSocket endpoint for XMPP
+- `TEST_FILE_URL`: URL of a test file for attachment testing
+- `CREATE_NEW_ROOM`: Whether to create a new room (true/false)
+- `EXISTING_ROOM_JID`: JID of an existing room to join
 
 ## Usage
 
-### Development Mode
+1. Run the bot in development mode:
 ```bash
 npm run dev
 ```
 
-### Production Mode
+2. Run the bot in production mode:
 ```bash
-npm run build
 npm start
 ```
 
-## Configuration Options
-
-### Test Users
-- `CREATE_NEW_USERS=true`: Create new test users
-- `CREATE_NEW_USERS=false`: Use existing user credentials
-  - Requires `EXISTING_USER_ID` and `EXISTING_USER_PASSWORD`
-
-### Chat Rooms
-- `CREATE_NEW_ROOM=true`: Create a new test room
-- `CREATE_NEW_ROOM=false`: Use existing room
-  - Requires `EXISTING_ROOM_JID`
-
-### Timeouts
-- `MESSAGE_WAIT_TIME`: Delay between message operations
-- `MAX_RETRIES`: Maximum retry attempts for failed operations
-- `RETRY_DELAY`: Delay between retry attempts
-
-## Additional Test Scenarios
-
-Consider adding these scenarios:
-1. Message editing and deletion
-2. Room member management (add/remove)
-3. Room permission testing
-4. Message reaction testing
-5. User blocking/unblocking
-6. Rate limit testing
-7. Error condition handling
-8. Message history retrieval
-9. Room configuration changes
-10. User presence verification
-
-## Directory Structure
-
+3. Run tests:
+```bash
+npm test
 ```
-test-bot/
-├── src/
-│   ├── index.ts         # Main bot initialization
-│   ├── config.ts        # Configuration management
-│   └── test-scenarios.ts # Test implementation
-├── package.json        # Dependencies and scripts
-├── .env.example       # Environment configuration template
-└── README.md          # Documentation
+
+4. Run cleanup script:
+```bash
+npm run cleanup
 ```
+
+The cleanup script will:
+1. Find all test users and rooms
+2. Display a list of found test data
+3. Ask for confirmation before deletion
+4. Remove confirmed test data
+5. Log the results
+
+## Test Scenarios
+
+The bot runs the following test scenarios in sequence:
+
+1. User Creation:
+   - Generates unique bot user credentials
+   - Creates a bot user account
+   - Initializes XMPP client
+
+2. Room Setup:
+   - Creates a new room or joins an existing one
+   - Validates room access and permissions
+
+3. Message Testing:
+   - Basic text messaging
+   - Message mentions
+   - Link sharing
+   - File attachments
+   - Message reactions
+   - Message editing
+   - Message replies
+   - Message deletion
+
+4. Room Management:
+   - Participant listing
+   - Room information retrieval
+   - Room settings updates
+   - Room leave/rejoin
+
+## Logging
+
+The bot uses Winston for logging. Logs are stored in the `logs` directory with the following files:
+- `test-bot.log`: Main application logs
+- `error.log`: Error-specific logs
+
+## Error Handling
+
+The bot includes comprehensive error handling for:
+- API request failures
+- XMPP connection issues
+- Authentication errors
+- Room access problems
+- Message delivery failures
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

@@ -5,6 +5,7 @@ import { TestBotConfig } from './config';
 import { Logger } from 'winston';
 import { v4 as uuidv4 } from 'uuid';
 import { BotUser, RoomListResponse } from './types';
+import xml = require('@xmpp/xml');
 
 interface UserResponse {
   ok: boolean;
@@ -87,12 +88,10 @@ export class TestScenarios {
         }
       }
 
-      // Step 4: Send test messages
-      if (this.roomJid) {
-        await this.sendMessage('Hello! I am a test bot 🤖');
-        await new Promise(resolve => setTimeout(resolve, this.config.messageWaitTime));
-      }
+      // Step 4: Run chat room tests
+      await this.runChatRoomTests();
 
+      this.logger.info('All test scenarios completed successfully');
     } catch (error) {
       this.logger.error('Test scenarios failed', { error });
       throw error;
@@ -388,53 +387,311 @@ export class TestScenarios {
   }
 
   /**
-   * Sends a message to the current room
+   * Runs chat room tests
    */
-  private async sendMessage(message: string): Promise<void> {
-    if (!this.botUser || !this.roomJid) {
-      throw new Error('Bot user or room not initialized');
+  private async runChatRoomTests(): Promise<void> {
+    if (!this.roomJid) {
+      throw new Error('No room joined yet');
     }
 
     try {
-      this.logger.info('Sending message...', { message });
-      await axios.post<MessageResponse>(
-        `${this.config.apiUrl}/v1/chat/message`,
-        {
-          userId: this.botUser.id,
-          roomJid: this.roomJid,
-          message
-        },
-        {
-          headers: {
-            'Authorization': this.botUser.accessToken,
-            'x-app-id': this.config.appId
-          }
-        }
-      );
+      // Test 1: Send basic text message
+      this.logger.info('Testing: Send basic text message');
+      await this.sendMessage('Hello, this is a test message from the bot! 👋');
 
-      this.logger.info('Message sent successfully', { message });
+      // Test 2: Send message with mentions
+      this.logger.info('Testing: Send message with mentions');
+      await this.sendMessage('Hello @all! This is a message with mentions.');
+
+      // Test 3: Send message with links
+      this.logger.info('Testing: Send message with links');
+      await this.sendMessage('Check out our website: https://ethora.com');
+
+      // Test 4: Send image attachment
+      this.logger.info('Testing: Send image attachment');
+      await this.sendFileAttachment('image', 'test-image.jpg');
+
+      // Test 5: Send document attachment
+      this.logger.info('Testing: Send document attachment');
+      await this.sendFileAttachment('document', 'test-document.pdf');
+
+      // Test 6: Send message and test reactions
+      this.logger.info('Testing: Message reactions');
+      const messageId = await this.sendMessage('This message will be reacted to');
+      await this.reactToMessage(messageId, '👍');
+      await this.reactToMessage(messageId, '❤️');
+
+      // Test 7: Send message and edit it
+      this.logger.info('Testing: Message editing');
+      const messageToEdit = await this.sendMessage('This message will be edited');
+      await this.editMessage(messageToEdit, 'This message has been edited');
+
+      // Test 8: Send message and reply to it
+      this.logger.info('Testing: Message replies');
+      const messageToReplyTo = await this.sendMessage('This message will be replied to');
+      await this.replyToMessage(messageToReplyTo, 'This is a reply to the message');
+
+      // Test 9: Send message and delete it
+      this.logger.info('Testing: Message deletion');
+      const messageToDelete = await this.sendMessage('This message will be deleted');
+      await this.deleteMessage(messageToDelete);
+
+      // Test 10: Get room participants
+      this.logger.info('Testing: Get room participants');
+      const participants = await this.getRoomParticipants();
+      this.logger.info('Room participants:', { participants });
+
+      // Test 11: Get room info
+      this.logger.info('Testing: Get room info');
+      const roomInfo = await this.getRoomInfo();
+      this.logger.info('Room info:', { roomInfo });
+
+      // Test 12: Update room settings
+      this.logger.info('Testing: Update room settings');
+      await this.updateRoomSettings({
+        title: 'Updated Test Room',
+        description: 'This room has been updated by the test bot'
+      });
+
+      // Test 13: Leave and rejoin room
+      this.logger.info('Testing: Leave and rejoin room');
+      await this.leaveRoom();
+      await this.joinRoom(this.roomJid);
+
+      this.logger.info('All chat room tests completed successfully');
     } catch (error) {
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response: { status: number; statusText: string; data: any }; message: string };
-        this.logger.error('Failed to send message', {
-          status: axiosError.response.status,
-          statusText: axiosError.response.statusText,
-          data: axiosError.response.data,
-          error: axiosError.message,
-          message
-        });
-      } else if (error instanceof Error) {
-        this.logger.error('Failed to send message', { 
-          error: error.message,
-          message
-        });
-      } else {
-        this.logger.error('Failed to send message', { 
-          error: String(error),
-          message
-        });
-      }
+      this.logger.error('Chat room tests failed', { error });
       throw error;
     }
+  }
+
+  /**
+   * Sends a message to the current room and returns its ID
+   */
+  private async sendMessage(content: string): Promise<string> {
+    if (!this.client || !this.roomJid) {
+      throw new Error('XMPP client not initialized or no room joined');
+    }
+
+    const messageId = uuidv4();
+    const message = xml(
+      'message',
+      {
+        to: this.roomJid,
+        type: 'groupchat',
+        id: messageId
+      },
+      xml('body', {}, content)
+    );
+
+    await this.client.send(message);
+    this.logger.info('Message sent successfully', { content, messageId });
+    return messageId;
+  }
+
+  private async sendFileAttachment(type: 'image' | 'document' | 'audio' | 'video', filename: string): Promise<void> {
+    if (!this.roomJid) {
+      throw new Error('No room joined');
+    }
+
+    // Download test file from the configured URL
+    const response = await axios.get(this.config.testFileUrl, { responseType: 'arraybuffer' });
+    const fileData = response.data as ArrayBuffer;
+
+    // Create file upload request
+    const formData = new FormData();
+    formData.append('file', new Blob([fileData]), filename);
+    formData.append('type', type);
+
+    // Upload file
+    const uploadResponse = await axios.post<{ url: string }>(
+      `${this.config.apiUrl}/v1/files/upload`,
+      formData,
+      {
+        headers: {
+          'Authorization': `Bearer ${await this.createServerToken()}`,
+          'Content-Type': 'multipart/form-data',
+          'x-app-id': this.config.appId
+        }
+      }
+    );
+
+    // Send message with file attachment
+    await this.sendMessage(`Here's a ${type} attachment: ${uploadResponse.data.url}`);
+  }
+
+  /**
+   * Reacts to a message with an emoji
+   */
+  private async reactToMessage(messageId: string, reaction: string): Promise<void> {
+    if (!this.client || !this.roomJid) {
+      throw new Error('XMPP client not initialized or no room joined');
+    }
+
+    const reactionMessage = xml(
+      'message',
+      {
+        to: this.roomJid,
+        type: 'groupchat',
+        id: uuidv4()
+      },
+      xml('reaction', {
+        messageId,
+        reaction
+      })
+    );
+
+    await this.client.send(reactionMessage);
+    this.logger.info('Message reaction sent successfully', { messageId, reaction });
+  }
+
+  /**
+   * Edits a message
+   */
+  private async editMessage(messageId: string, newContent: string): Promise<void> {
+    if (!this.client || !this.roomJid) {
+      throw new Error('XMPP client not initialized or no room joined');
+    }
+
+    const editMessage = xml(
+      'message',
+      {
+        to: this.roomJid,
+        type: 'groupchat',
+        id: uuidv4()
+      },
+      xml('edit', {
+        messageId
+      }),
+      xml('body', {}, newContent)
+    );
+
+    await this.client.send(editMessage);
+    this.logger.info('Message edited successfully', { messageId, newContent });
+  }
+
+  /**
+   * Replies to a message
+   */
+  private async replyToMessage(messageId: string, replyContent: string): Promise<void> {
+    if (!this.client || !this.roomJid) {
+      throw new Error('XMPP client not initialized or no room joined');
+    }
+
+    const replyMessage = xml(
+      'message',
+      {
+        to: this.roomJid,
+        type: 'groupchat',
+        id: uuidv4()
+      },
+      xml('reply', {
+        messageId
+      }),
+      xml('body', {}, replyContent)
+    );
+
+    await this.client.send(replyMessage);
+    this.logger.info('Message reply sent successfully', { messageId, replyContent });
+  }
+
+  /**
+   * Deletes a message
+   */
+  private async deleteMessage(messageId: string): Promise<void> {
+    if (!this.client || !this.roomJid) {
+      throw new Error('XMPP client not initialized or no room joined');
+    }
+
+    const deleteMessage = xml(
+      'message',
+      {
+        to: this.roomJid,
+        type: 'groupchat',
+        id: uuidv4()
+      },
+      xml('delete', {
+        messageId
+      })
+    );
+
+    await this.client.send(deleteMessage);
+    this.logger.info('Message deleted successfully', { messageId });
+  }
+
+  private async getRoomParticipants(): Promise<string[]> {
+    if (!this.roomJid) {
+      throw new Error('No room joined');
+    }
+
+    const response = await axios.get<{ participants: string[] }>(
+      `${this.config.apiUrl}/v1/chats/${this.roomJid}/participants`,
+      {
+        headers: {
+          'Authorization': `Bearer ${await this.createServerToken()}`,
+          'x-app-id': this.config.appId
+        }
+      }
+    );
+
+    return response.data.participants;
+  }
+
+  private async getRoomInfo(): Promise<any> {
+    if (!this.roomJid) {
+      throw new Error('No room joined');
+    }
+
+    const response = await axios.get(
+      `${this.config.apiUrl}/v1/chats/${this.roomJid}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${await this.createServerToken()}`,
+          'x-app-id': this.config.appId
+        }
+      }
+    );
+
+    return response.data;
+  }
+
+  private async updateRoomSettings(settings: { title?: string; description?: string }): Promise<void> {
+    if (!this.roomJid) {
+      throw new Error('No room joined');
+    }
+
+    await axios.patch(
+      `${this.config.apiUrl}/v1/chats/${this.roomJid}`,
+      settings,
+      {
+        headers: {
+          'Authorization': `Bearer ${await this.createServerToken()}`,
+          'Content-Type': 'application/json',
+          'x-app-id': this.config.appId
+        }
+      }
+    );
+  }
+
+  private async leaveRoom(): Promise<void> {
+    if (!this.client || !this.roomJid) {
+      throw new Error('XMPP client not initialized or no room joined');
+    }
+
+    const localJid = this.client.jid?.getLocal();
+    if (!localJid) {
+      throw new Error('Could not get local JID');
+    }
+
+    const presence = xml(
+      'presence',
+      {
+        to: `${this.roomJid}/${localJid}`,
+        type: 'unavailable'
+      }
+    );
+
+    await this.client.send(presence);
+    this.logger.info('Left room successfully', { roomJid: this.roomJid });
   }
 }

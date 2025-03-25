@@ -1,28 +1,33 @@
 {
-  "name": "@ethora/test-bot",
+  "name": "ethora-test-bot",
   "version": "1.0.0",
-  "description": "Automated testing bot for Ethora platform core functionalities",
+  "description": "Test bot for Ethora platform",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
     "start": "node dist/index.js",
     "dev": "ts-node src/index.ts",
-    "test": "jest"
+    "build": "tsc",
+    "test": "jest",
+    "cleanup": "ts-node src/cleanup-script.ts"
   },
   "dependencies": {
-    "@ethora/bot-core": "file:../../packages/bot-core",
-    "@types/jsonwebtoken": "^9.0.9",
-    "@types/uuid": "^10.0.0",
+    "@xmpp/client": "^0.13.1",
+    "@xmpp/xml": "^0.13.1",
     "axios": "^1.6.7",
     "dotenv": "^16.4.5",
-    "form-data": "^4.0.0",
+    "inquirer": "^8.2.6",
     "jsonwebtoken": "^9.0.2",
-    "uuid": "^11.1.0",
+    "uuid": "^9.0.1",
     "winston": "^3.11.0"
   },
   "devDependencies": {
-    "@types/node": "^20.17.24",
-    "@types/winston": "^2.4.4",
+    "@types/inquirer": "^8.2.10",
+    "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.11.19",
+    "@types/uuid": "^9.0.8",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }
