@@ -10,6 +10,6 @@
     "dev": "npm run dev --workspaces"
   },
   "dependencies": {
-    "@babel/helpers": "^7.26.10"
+    "@babel/helpers": "^7.27.1"
   }
 }
