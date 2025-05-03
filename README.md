@@ -45,11 +45,11 @@ npm link @ethora/bot-core
 
 4. Create a configuration file `.env` in the bot directory:
 ```env
-BOT_JID=your-bot@xmpp.example.com
-BOT_PASSWORD=your-bot-password
-ROOM_JID=room@conference.xmpp.example.com
-BOT_NAME=AI Assistant
-OPENAI_API_KEY=your-openai-api-key
+BOT_JID=your-bot@xmpp.example.com # ID of your bot user from ethora.com
+BOT_PASSWORD=your-bot-password # Password of your bot user from ethora.com
+ROOM_JID=room@conference.xmpp.example.com  # chat room ID
+BOT_NAME=AI Assistant # bot's display name 
+OPENAI_API_KEY=your-openai-api-key # your OpenAI API key
 ```
 
 5. Start the bot:
@@ -106,10 +106,15 @@ npm install
 npm link @ethora/bot-core
 ```
 
-4. Create the environment configuration:
-```bash
-nano .env
+4. Create a configuration file `.env` in the bot directory:
+```env
+BOT_JID=your-bot@xmpp.example.com # ID of your bot user from ethora.com
+BOT_PASSWORD=your-bot-password # Password of your bot user from ethora.com
+ROOM_JID=room@conference.xmpp.example.com  # chat room ID
+BOT_NAME=AI Assistant # bot's display name 
+OPENAI_API_KEY=your-openai-api-key # your OpenAI API key
 ```
+
 Add your configuration as shown in the Local Development Setup section.
 
 5. Start the bot with PM2:
