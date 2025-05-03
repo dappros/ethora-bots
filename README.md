@@ -158,18 +158,9 @@ Now your bot will:
 - Start automatically when the server reboots
 - Run persistently in the background
 
-You can verify the setup by:
-- Checking the process list: `pm2 list`
-- Rebooting the server and confirming the bot starts automatically
-- Monitoring the logs: `pm2 logs ethora-openai-bot`
-
-To remove the auto-startup configuration:
-```bash
-pm2 unstartup systemd
-```
-
 ### Monitoring and Maintenance
 
+#### Basic Commands
 - View bot logs:
 ```bash
 pm2 logs ethora-openai-bot
@@ -183,6 +174,44 @@ pm2 status
 - Restart the bot:
 ```bash
 pm2 restart ethora-openai-bot
+```
+
+#### Advanced Monitoring
+- View real-time logs:
+```bash
+pm2 logs ethora-openai-bot --lines 100 --raw
+```
+
+- Monitor CPU/Memory usage:
+```bash
+pm2 monit
+```
+
+- View detailed process information:
+```bash
+pm2 show ethora-openai-bot
+```
+
+- Check error logs:
+```bash
+pm2 logs ethora-openai-bot --err
+```
+
+- Check output logs:
+```bash
+pm2 logs ethora-openai-bot --out
+```
+
+### XMPP Protocol Notes
+
+The bot follows the latest Ethora XMPP protocol specifications:
+- Uses `type="bot"` attribute in presence and message stanzas
+- Does not include name fields in stanzas
+- Uses proper MUC protocol namespace for room interactions
+
+To remove the auto-startup configuration:
+```bash
+pm2 unstartup systemd
 ```
 
 ## Contributing
