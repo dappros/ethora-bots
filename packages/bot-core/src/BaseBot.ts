@@ -46,6 +46,19 @@ export abstract class BaseBot extends EventEmitter {
       resource: 'bot'
     });
 
+    const originalSend = this.xmppClient.send;
+    this.xmppClient.send = (stanza: any) => {
+      if (stanza.name === 'presence' || stanza.name === 'message') {
+        const dataElements = stanza.getChildren('data');
+        dataElements.forEach((data: any) => {
+          if (data.attrs.xmlns === 'jabber:client') {
+            stanza.removeChild(data);
+          }
+        });
+      }
+      return originalSend.call(this.xmppClient, stanza);
+    };
+
     this.xmppClient.on('connect', () => {
       console.log('🔄 XMPP client connecting...');
     });
@@ -142,7 +155,8 @@ export abstract class BaseBot extends EventEmitter {
     const stanza = xml(
       'message',
       { to: this.roomJid, type: 'groupchat' },
-      xml('body', {}, message)
+      xml('body', {}, message),
+      xml('x', { xmlns: 'http://jabber.org/protocol/muc#user', type: 'bot' })
     )
     
     await this.xmppClient.send(stanza)
@@ -155,11 +169,7 @@ export abstract class BaseBot extends EventEmitter {
       'presence',
       { to: `${this.roomJid}/${this.xmppClient.jid!.local}` },
       xml('x', { xmlns: 'http://jabber.org/protocol/muc' }),
-      xml('data', { 
-        xmlns: 'http://jabber.org/protocol/muc#user',
-        type: 'bot',
-        name: this.botName
-      })
+      xml('x', { xmlns: 'http://jabber.org/protocol/muc#user', type: 'bot' })
     )
     
     await this.xmppClient.send(presence)

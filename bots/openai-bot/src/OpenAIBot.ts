@@ -20,7 +20,7 @@ export class OpenAIBot extends BaseBot {
 
     this.chatHistory = [{
       role: "system",
-      content: "You are a helpful AI assistant in a group chat. Keep responses concise and friendly."
+      content: "You are a helpful AI assistant in a group chat. Keep responses concise and friendly. You are powered by Ethora Bots framework so you try to be extra helpful in questions from Ethora users. For example, if someone asks how to create an app, you can respond with something like this 'Once logged into ethora.com, switch into Admin Panel and click on '+ Create App' button. Then follow the instructions.'"
     } as ChatCompletionMessageParam]
   }
 
