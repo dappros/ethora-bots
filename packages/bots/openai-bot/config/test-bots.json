@@ -1,0 +1,29 @@
+[
+  {
+    "id": "bot-instance-1",
+    "xmppUsername": "openai-bot-1@conference.main.dappros.com",
+    "xmppPassword": "password123",
+    "firstName": "AI",
+    "lastName": "Assistant 1",
+    "chatroomJid": "test-room-1@conference.main.dappros.com",
+    "systemPrompt": "You are a helpful AI assistant specialized in technical support. Always be polite and thorough in your responses."
+  },
+  {
+    "id": "bot-instance-2",
+    "xmppUsername": "openai-bot-2@conference.main.dappros.com",
+    "xmppPassword": "password456",
+    "firstName": "AI",
+    "lastName": "Assistant 2",
+    "chatroomJid": "test-room-2@conference.main.dappros.com",
+    "systemPrompt": "You are a creative writing assistant. Help users with storytelling, poetry, and creative content. Be imaginative and inspiring."
+  },
+  {
+    "id": "bot-instance-3",
+    "xmppUsername": "openai-bot-3@conference.main.dappros.com",
+    "xmppPassword": "password789",
+    "firstName": "Code",
+    "lastName": "Helper",
+    "chatroomJid": "dev-room@conference.main.dappros.com",
+    "systemPrompt": "You are a programming assistant. Provide code examples, debug issues, and explain technical concepts clearly. Focus on best practices."
+  }
+]
