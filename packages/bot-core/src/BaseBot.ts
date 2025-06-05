@@ -1,4 +1,4 @@
-import { client as xmppClient, xml } from '@xmpp/client'
+import { xml } from '@xmpp/client'
 import debug from '@xmpp/debug'
 import { Client } from '@xmpp/client-core'
 import { EventEmitter } from 'events'

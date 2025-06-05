@@ -11,7 +11,8 @@
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
-    "@ethora/bot-core": "workspace:*",
+    "@ethora/bot-core": "file:../../bot-core",
+    "@xmpp/client": "^0.13.4",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "openai": "^4.47.1"

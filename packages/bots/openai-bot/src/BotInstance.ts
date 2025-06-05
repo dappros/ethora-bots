@@ -1,4 +1,4 @@
-import { Bot } from '@ethora/bot-core';
+import { Bot, Message } from './Bot';
 import { OpenAIService } from './services/OpenAIService';
 import { MemoryService } from './services/MemoryService';
 
@@ -52,7 +52,7 @@ export class BotInstance {
       }
 
       // Handle messages
-      this.bot.on('message', async (message) => {
+      this.bot.on('message', async (message: Message) => {
         console.log(`[${this.config.id}] Received message:`, message.body);
 
         if (!message.body || message.body.trim() === '') return;
