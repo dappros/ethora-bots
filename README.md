@@ -4,6 +4,8 @@ This repository contains a collection of chatbots for the Ethora platform. It's 
 
 You can run one bot individually or multiple bots at once in different chat rooms using PM2. See ecosystem.md for latter option.
 
+**Part of the [Ethora SDK ecosystem](https://github.com/dappros/ethora#ecosystem)** — see all SDKs, tools, and sample apps. Follow cross-SDK updates in the [Release Notes](https://github.com/dappros/ethora/blob/main/RELEASE-NOTES.md).
+
 ## Repository Structure
 
 ```
