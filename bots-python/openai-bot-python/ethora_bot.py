@@ -31,7 +31,7 @@ class EthoraChatBot:
         ]
         
         # Configure connection settings
-        self.websocket_url = os.getenv('XMPP_ENDPOINT', 'wss://xmpp.ethoradev.com:5443/ws')
+        self.websocket_url = os.getenv('XMPP_ENDPOINT', 'wss://xmpp.chat.ethora.com:5443/ws')
         self.logger.info(f"Using WebSocket endpoint: {self.websocket_url}")
         
         # Parse the WebSocket URL
@@ -327,7 +327,7 @@ async def main():
     logger.info("Environment variables loaded successfully")
     logger.info(f"Initializing bot with JID: {bot_jid}")
     logger.info(f"Target room: {room_jid}")
-    logger.info(f"XMPP endpoint: {os.getenv('XMPP_ENDPOINT', 'wss://xmpp.ethoradev.com:5443/ws')}")
+    logger.info(f"XMPP endpoint: {os.getenv('XMPP_ENDPOINT', 'wss://xmpp.chat.ethora.com:5443/ws')}")
     
     try:
         logger.info("Creating bot instance...")

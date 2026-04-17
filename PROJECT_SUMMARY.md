@@ -20,7 +20,7 @@ Each bot in the `bots/` directory is a separate implementation using the core fr
 
 ### XMPP Protocol
 Ethora uses XMPP (Extensible Messaging and Presence Protocol) for real-time communication. Key aspects:
-- WebSocket connection to xmpp.ethoradev.com
+- WebSocket connection to xmpp.chat.ethora.com
 - MUC (Multi-User Chat) for room-based conversations
 - Custom data extensions for user information
 - Message stanzas with type="groupchat"

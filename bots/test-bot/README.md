@@ -57,11 +57,11 @@ npm install
 
 3. Create a `.env` file in the test-bot directory with the following configuration:
 ```env
-API_URL=https://dev.api.ethoradev.com
+API_URL=https://api.chat.ethora.com
 APP_ID=your_app_id
 APP_TOKEN=your_app_token
-XMPP_DOMAIN=dev.xmpp.ethoradev.com
-XMPP_ENDPOINT=wss://dev.xmpp.ethoradev.com:5443/ws
+XMPP_DOMAIN=xmpp.chat.ethora.com
+XMPP_ENDPOINT=wss://xmpp.chat.ethora.com:5443/ws
 TEST_FILE_URL=https://example.com/test-file.jpg
 ```
 

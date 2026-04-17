@@ -16,7 +16,7 @@ const bot = new PrisonerBot({
   password: process.env.BOT_PASSWORD!,
   roomJid: process.env.ROOM_JID!,
   botName: process.env.BOT_NAME || "Prisoner's Dilemma Bot",
-  xmppEndpoint: process.env.XMPP_ENDPOINT || 'wss://xmpp.ethoradev.com:5443/ws'
+  xmppEndpoint: process.env.XMPP_ENDPOINT || 'wss://xmpp.chat.ethora.com:5443/ws'
 })
 
 async function main() {

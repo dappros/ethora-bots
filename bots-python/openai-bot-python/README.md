@@ -29,9 +29,9 @@ cp .env.example .env
 
 3. Edit `.env` file with your credentials:
 ```env
-BOT_JID=your_bot_jid@xmpp.ethoradev.com
+BOT_JID=your_bot_jid@xmpp.chat.ethora.com
 BOT_PASSWORD=your_bot_password
-ROOM_JID=room_id@conference.xmpp.ethoradev.com
+ROOM_JID=room_id@conference.xmpp.chat.ethora.com
 OPENAI_API_KEY=your_openai_api_key
 BOT_NAME=AI Assistant Python
 ```

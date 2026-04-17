@@ -20,7 +20,7 @@ export interface TestBotConfig {
 }
 
 export const config: TestBotConfig = {
-  apiUrl: process.env.API_URL || 'https://dev.api.ethoradev.com',
+  apiUrl: process.env.API_URL || 'https://api.chat.ethora.com',
   appId: process.env.APP_ID || '',
   appToken: process.env.APP_TOKEN || '',
   botName: process.env.BOT_NAME || 'Ethora Test Bot',
@@ -32,6 +32,6 @@ export const config: TestBotConfig = {
   maxRetries: parseInt(process.env.MAX_RETRIES || '3'),
   retryDelay: parseInt(process.env.RETRY_DELAY || '1000'),
   testFileUrl: process.env.TEST_FILE_URL || 'https://picsum.photos/200/300',
-  xmppDomain: process.env.XMPP_DOMAIN || 'dev.xmpp.ethoradev.com',
-  xmppEndpoint: process.env.XMPP_ENDPOINT || 'wss://dev.xmpp.ethoradev.com:5443/ws',
+  xmppDomain: process.env.XMPP_DOMAIN || 'xmpp.chat.ethora.com',
+  xmppEndpoint: process.env.XMPP_ENDPOINT || 'wss://xmpp.chat.ethora.com:5443/ws',
 };

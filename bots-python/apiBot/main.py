@@ -26,7 +26,7 @@ class EthoraChatBot:
         self.bot_name = bot_name or "AI Assistant Python"
 
         # Configure connection settings
-        self.websocket_url = os.getenv('XMPP_ENDPOINT', 'wss://xmpp.ethoradev.com:5443/ws')
+        self.websocket_url = os.getenv('XMPP_ENDPOINT', 'wss://xmpp.chat.ethora.com:5443/ws')
         self.logger.info(f"Using WebSocket endpoint: {self.websocket_url}")
 
         parsed_url = urlparse(self.websocket_url)
@@ -224,10 +224,16 @@ async def main():
     logger = logging.getLogger(__name__)
     logger.info("Loading environment variables...")
 
-    bot_jid = '0xe_e6f278e_b_b_d_e_c2_f1c_ddc_e_dc_b117_b8263_f9f2a5_ea@xmpp.ethoradev.com'
-    bot_password = '5y6uuu6pmk'
-    room_jid = '6706332db1b1a4e984d3c7bc-0193e469-e77e-7e65-89b5-50a65975b783@conference.xmpp.ethoradev.com'
-    bot_name = 'Bot DxBot'
+    bot_jid = os.getenv('BOT_JID', 'your_bot_jid@xmpp.chat.ethora.com')
+    bot_password = os.getenv('BOT_PASSWORD', '')
+    room_jid = os.getenv('ROOM_JID', 'room_id@conference.xmpp.chat.ethora.com')
+    bot_name = os.getenv('BOT_NAME', 'Bot DxBot')
+
+    if not bot_password:
+        raise SystemExit(
+            'BOT_PASSWORD env var is required. '
+            'Provide it via .env or your process manager; do not hardcode it.'
+        )
 
     try:
         logger.info("Creating bot instance...")

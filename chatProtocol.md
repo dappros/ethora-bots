@@ -7,21 +7,21 @@ The Ethora Chat Protocol is built on XMPP (Extensible Messaging and Presence Pro
 ## Connection Details
 
 ### WebSocket Endpoint
-- Default URL: `wss://xmpp.ethoradev.com:5443/ws`
+- Default URL: `wss://xmpp.chat.ethora.com:5443/ws`
 - Protocol: `xmpp-framing`
 - Secure WebSocket (WSS) with TLS/SSL
 
 ### Authentication
 - Method: SASL PLAIN
 - Format: Base64-encoded string of `\x00username\x00password`
-- JID (Jabber ID) format: `user_id@xmpp.ethoradev.com`
-- Room JID format: `room_id@conference.xmpp.ethoradev.com`
+- JID (Jabber ID) format: `user_id@xmpp.chat.ethora.com`
+- Room JID format: `room_id@conference.xmpp.chat.ethora.com`
 
 ## Connection Flow
 
 1. **Initial Connection**
    ```xml
-   <open xmlns="urn:ietf:params:xml:ns:xmpp-framing" to="xmpp.ethoradev.com" version="1.0"/>
+   <open xmlns="urn:ietf:params:xml:ns:xmpp-framing" to="xmpp.chat.ethora.com" version="1.0"/>
    ```
 
 2. **Authentication**
@@ -33,7 +33,7 @@ The Ethora Chat Protocol is built on XMPP (Extensible Messaging and Presence Pro
 
 3. **New Stream After Auth**
    ```xml
-   <open xmlns="urn:ietf:params:xml:ns:xmpp-framing" to="xmpp.ethoradev.com" version="1.0"/>
+   <open xmlns="urn:ietf:params:xml:ns:xmpp-framing" to="xmpp.chat.ethora.com" version="1.0"/>
    ```
 
 4. **Resource Binding**
@@ -56,7 +56,7 @@ The Ethora Chat Protocol is built on XMPP (Extensible Messaging and Presence Pro
 
 ### Joining a Room
 ```xml
-<presence to="room_id@conference.xmpp.ethoradev.com/user_id">
+<presence to="room_id@conference.xmpp.chat.ethora.com/user_id">
   <x xmlns="http://jabber.org/protocol/muc"/>
   <data xmlns="jabber:client" 
         fullName="Bot Name" 
@@ -68,7 +68,7 @@ The Ethora Chat Protocol is built on XMPP (Extensible Messaging and Presence Pro
 
 ### Sending Messages
 ```xml
-<message to="room_id@conference.xmpp.ethoradev.com" type="groupchat">
+<message to="room_id@conference.xmpp.chat.ethora.com" type="groupchat">
   <body>Message text</body>
   <data xmlns="jabber:client" 
         fullName="Bot Name" 
@@ -150,14 +150,14 @@ token = base64.b64encode(auth_str.encode('utf-8')).decode('utf-8')
 
 # Connection establishment
 websocket = await websockets.connect(
-    'wss://xmpp.ethoradev.com:5443/ws',
+    'wss://xmpp.chat.ethora.com:5443/ws',
     subprotocols=['xmpp-framing']
 )
 
 # Send initial stream header
 await websocket.send(
     '<open xmlns="urn:ietf:params:xml:ns:xmpp-framing" '
-    'to="xmpp.ethoradev.com" version="1.0"/>'
+    'to="xmpp.chat.ethora.com" version="1.0"/>'
 )
 ```
 
@@ -166,7 +166,7 @@ await websocket.send(
 import { client, xml } from '@xmpp/client'
 
 const xmpp = client({
-  service: 'wss://xmpp.ethoradev.com:5443/ws',
+  service: 'wss://xmpp.chat.ethora.com:5443/ws',
   username: jid.split('@')[0],
   password: password,
 })
