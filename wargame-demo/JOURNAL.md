@@ -27,6 +27,45 @@ this directory is in a public repo).
 
 ---
 
+## 2026-05-26 — Recipe doc + MCP discoverability pass
+
+Two follow-ups after the first Cannae run played out.
+
+**Reproducibility doc.** Added [`RECIPE.md`](RECIPE.md) — the complete
+copy-pasteable setup: the four REST calls (login → create app → create
+room → create three agents), the three invite-to-chat calls, the
+verbatim system prompts for `Hannibal` / `Varro` / `GameMaster`, the
+gating settings, transcript-retrieval options, and troubleshooting for
+the two gotchas this first run hit (owner not in `User2Chats` for a
+chat created via API; turn-hijacking from the mention matcher).
+Structured so future scenarios slot in as new `§4.x` prompt sections.
+
+**MCP discoverability improvements.** While provisioning Cannae from
+the MCP tool catalog it was harder than it should have been to
+discover that you can deploy *multiple* agents into one chat with
+custom personas — exactly the differentiating use case. Three gaps
+fixed in `ethora-mcp-cli`:
+
+- Tool descriptions for `ethora-agents-create-v2` / `-update-v2` /
+  `-agent-invite-to-chat` rewritten to explicitly mention the
+  multi-agent scenario and point at the `ethora-agents-quickstart`
+  prompt. Also corrected the misleading `(app-token auth)` note (the
+  route actually requires user auth).
+- Every agent-tool field now has a `.describe()` with concrete
+  guidance — particularly the gating fields (`responseMode`,
+  `responseProbability`, `cooldownSec`) which any AI client reading
+  the schema can now surface to its user. Crucial for `responseMode`
+  whose four values control quite different behaviour.
+- The `ethora-agents-quickstart` recipe got a new "Controlling
+  turn-taking" section explaining `responseMode: 'mentioned'`,
+  single-word display-name rule, and the end-with-@-mention prompt
+  pattern that lets you build orchestrator-free turn loops.
+
+Net effect: a fresh MCP user reading the tool catalog now sees the
+multi-agent capability surfaced rather than buried, and the field
+docs explain the response-gate model without having to read the
+ai-service code.
+
 ## 2026-05-26 — Cannae run-01: first full game
 
 The first end-to-end run played out cleanly. Provisioning to victory in under
