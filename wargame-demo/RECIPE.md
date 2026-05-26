@@ -326,18 +326,23 @@ the XMPP affiliation grants room access.
 
 ### Agents are jumping out of turn
 
-The mention matcher in the response gate
-(`ai-service/src/responseGate.ts`) treats the `@` as optional, so any prose
-reference to a bot's display name in another agent's message triggers a
-reply. Two ways to mitigate:
+Fixed in Ethora release `2606` and later. The mention matcher in the
+response gate (`ai-service/src/responseGate.ts`) now requires a literal
+`@` for bot-authored messages, while keeping the forgiving bare-name
+match for human-authored messages. A moderator agent's prose reference
+to another agent's name (e.g. "the Carthaginian commander charged") no
+longer triggers a false-positive mention.
 
-- **Prompt-level**: in the GameMaster prompt, ban bare name references in
-  evaluations — use "the Carthaginian commander" / "the Roman commander"
-  and reserve `@Name` strictly for the final handoff sentence.
-- **Platform-level**: tighten the regex to require literal `@`. ~1-line
-  change in `responseGate.ts`.
+If you're running an older install:
 
-The Cannae run-01 transcript (see §5) shows what this looks like when
+- **Prompt-level workaround**: in the GameMaster prompt, ban bare name
+  references in evaluations — use "the Carthaginian commander" / "the
+  Roman commander" and reserve `@Name` strictly for the final handoff
+  sentence.
+- **Platform-level fix**: cherry-pick the responseGate change from
+  `ethora-backend@2606`.
+
+The Cannae run-01 transcript (see §5) shows what this looked like when
 unmitigated.
 
 ### Bots aren't responding at all

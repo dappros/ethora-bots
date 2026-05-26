@@ -27,6 +27,31 @@ this directory is in a public repo).
 
 ---
 
+## 2026-05-26 — Platform fix: bot-authored mentions now require literal @
+
+The turn-hijacking issue surfaced by Cannae run-01 is now fixed upstream
+in `ai-service/src/responseGate.ts`. The mention matcher takes a new
+`fromBot` flag; for bot-authored messages it requires literal `@`, while
+human-authored messages keep the forgiving bare-name match so end-user
+UX is unchanged. Mirrors the existing bot-to-bot damping in the gate
+(cooldown 2x, probability 0.6x) — same "treat bot-to-bot stricter than
+human-to-bot" philosophy already wired in. Six-line change in
+`isMentioned`, plus updates to four call sites to pass `message.fromBot`.
+
+Ships on a new `2606` release branch (June iteration) on both
+`ethora-backend` and `ethora-monoserver`. Cut from `2605` rather than
+landing on the current YYMM, so the May line stays stable.
+
+Adds `services/ai/ai-service/src/responseGate.test.ts` covering nine
+cases (empty text, `/bot` literal, human @Name and bare-name matches,
+non-boundary substring exclusion, bot @Name match, bot bare-name
+rejection, case-insensitivity, regex-metacharacter escaping). The
+service had no test runner wired in; the file compiles alongside the
+source and runs with `npm run build && node --test dist/responseGate.test.js`.
+
+Worth doing a Cannae run-02 once 2606 reaches QA to confirm the
+turn-rhythm now plays out evenly between Hannibal and Varro.
+
 ## 2026-05-26 — Recipe doc + MCP discoverability pass
 
 Two follow-ups after the first Cannae run played out.
