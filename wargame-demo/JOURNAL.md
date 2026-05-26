@@ -27,6 +27,65 @@ this directory is in a public repo).
 
 ---
 
+## 2026-05-26 — Cannae run-01: first full game
+
+The first end-to-end run played out cleanly. Provisioning to victory in under
+twenty minutes of wall-clock work on our side, of which the actual
+simulation was about one minute once the kickoff message hit the room.
+
+**What worked.**
+
+- **Historical outcome reproduced.** Decisive Carthaginian victory in five
+  turns; Roman force from 86,000 to 42,000 (~51% loss), morale "broken."
+  Tactics tracked the historical engagement closely: Hannibal's
+  controlled-withdrawal-then-envelopment, the Roman deep-column push into
+  the trap, Carthaginian cavalry sweeping both wings.
+- **Personas held.** Hannibal invoking Baal Hammon and Tanit, addressing
+  Hasdrubal / Maharbal / Mago by name; Varro invoking Mars and Jupiter
+  Optimus Maximus, addressing "men of Rome" and "my colleague" Paullus.
+  Period-appropriate vocabulary throughout, no fourth-wall breaks.
+- **GM drove the loop.** Opening brief + TURN 0 battle log → five
+  evaluations with the structured log block updated each turn → victory
+  declared at the right moment → graceful close. No external orchestrator
+  code; the GM's prompt did all the work via the response gate.
+- **Provisioning was small.** App + room + three agents + invites, all via
+  ~50 lines of curl against the public REST API.
+
+**What didn't, and the platform issue it surfaced.**
+
+Looking at the message count by speaker: GM 7, Hannibal 8, Varro 1,
+spectator 1. Varro only got one in-character turn — Hannibal's bot
+interjected on the turns the GM had explicitly addressed to `@Varro`.
+
+Root cause is in the response-gate mention matcher
+(`ai-service/src/responseGate.ts`):
+
+```js
+new RegExp(`(^|\\W)@?${botName}\\b`, 'i')
+```
+
+The `@?` makes the `@` optional, so the matcher fires on any prose
+reference to "Hannibal" / "Hannibal's encirclement" / etc., not just on
+true `@Hannibal` handoffs. Since the GM's evaluation paragraphs
+naturally describe what each commander is doing by name, every GM
+message inadvertently mentions both bots — both fire — and the faster
+one (Hannibal) wins the race to reply.
+
+This will hit any multi-bot setup where the bots reference each other
+by name in prose. Two ways to address:
+
+1. **Prompt-level workaround (immediate):** instruct the GM to use
+   generic labels ("the Carthaginian commander" / "the Roman commander")
+   in its evaluations, reserving `@Name` strictly for the final handoff
+   sentence.
+2. **Platform-level fix:** tighten the regex — either drop the `@?`
+   (require literal `@` for bot-to-bot triggering) or add a strict mode
+   for the gate. ~1-line change.
+
+The transcript is saved at
+[`transcripts/2026-05-26-cannae-run-01.md`](transcripts/2026-05-26-cannae-run-01.md)
+for case-study mining and as a baseline for tuning the next run.
+
 ## 2026-05-26 — Upstream contribution: MCP CLI gating fields
 
 While preparing to provision the demo agents entirely via Ethora's MCP CLI,
