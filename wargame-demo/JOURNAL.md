@@ -27,6 +27,65 @@ this directory is in a public repo).
 
 ---
 
+## 2026-05-26 — Scenario C provisioned: Narva 2027 (Article 5 contingency)
+
+Third scenario, and first with the multi-allied agent shape. Pinned room
+**"Narva 2027 — Wargame"** in the same app. Five agents:
+
+- `Russia` — Commander of the fictional task force conducting a limited-
+  objective operation against Narva and the Russian-speaking enclave in
+  Ida-Virumaa under a stated "peacekeeping" pretext.
+- `NATO` — SACEUR at SHAPE. Strategic level, NAC consultation, Article 4
+  → 5 process, weapons release authority within NATO doctrine.
+- `Estonia` — Commander of Estonian Defence Forces in Tallinn. Tactical
+  national defense, sovereignty-conscious, fast decision cycle, civilian
+  evacuation of Narva as humanitarian priority.
+- `BalticAllies` — Latvian and Lithuanian joint coordinator. Suwałki
+  Gap status, hybrid-threat defense, host-nation support to reinforcing
+  allies.
+- `GameMaster` — same arbiter role; situation log expanded to track
+  Article 5 process step, Suwałki Gap status, and civilian evacuation
+  in addition to forces and escalation rung.
+
+**Why named actors here when Anchor Strait was abstracted.** Narva is a
+widely-studied defense-planning contingency in NATO and allied
+literature (RAND, CEPA, national wargames). Unlike Anchor Strait — a
+deliberately abstract scenario for pure escalation-mechanics study —
+Narva needs its real geography (the bridge crossings, the road to
+Tallinn, the Russian-speaking population concentration, the Suwałki
+Gap) and Article 5 political stakes to be analytically meaningful.
+Abstracting it would lose the point.
+
+**Hygiene around real actors.** Stricter rules than the other scenarios:
+
+- GM opens with an explicit "fictional analytical defense-planning
+  exercise, not a prediction, advocacy, or propaganda" disclaimer.
+- All four commander personas reference role titles only; no specific
+  living individuals named.
+- The Russia persona articulates the stated political-military
+  rationale within their own POV (standard wargame practice — a
+  commander states their orders honestly) but is explicitly forbidden
+  from advocating it personally or claiming it factually outside the
+  exercise.
+- GM rule: redirect any participant drifting into political invective
+  or moral grandstanding back to operational specifics. Same realism
+  standard applied to all sides.
+
+These hygiene rules are documented in RECIPE.md §7 as the template for
+any future scenario that names real-world actors.
+
+**Multi-agent rhythm.** Turn order GM-enforced: `@Russia` moves → GM
+eval → `@NATO` (alliance political) → `@Estonia` (tactical defense) →
+`@BalticAllies` (regional posture, Suwałki Gap, hybrid threats) → GM
+eval of the combined coalition response → back to `@Russia`. About
+six messages per cycle. Will be the most demanding test yet of the
+mention-matcher fix on `2606` (or the prompt-level redundancy on
+`2605`) — five agents in one room means a lot of opportunity for
+cross-mentions in prose.
+
+Scenario A (Cannae) and Scenario B (Anchor Strait) are unchanged in
+their own rooms. All three live in the same app.
+
 ## 2026-05-26 — Scenario B provisioned: Anchor Strait (Baltic, fictional)
 
 Second scenario is now live in the same app as Cannae, in its own pinned
