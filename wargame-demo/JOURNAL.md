@@ -27,6 +27,48 @@ this directory is in a public repo).
 
 ---
 
+## 2026-05-26 — Scenario B provisioned: Anchor Strait (Baltic, fictional)
+
+Second scenario is now live in the same app as Cannae, in its own pinned
+room **"Anchor Strait — Wargame"**. Three new agents:
+
+- `North` — Maritime Component Commander of the fictional "Northern
+  Coalition," a destroyer-squadron-plus-light-carrier surface action
+  group conducting a freedom-of-navigation transit through a contested
+  Baltic strait. NATO-style brevity, escalation-control-minded.
+- `East` — Joint Defense Sector Commander of the fictional "Eastern
+  Republic," coastal missile regiment + integrated air defense +
+  tactical fighters + corvettes on and around the disputed island.
+  Formal diplomatic-military register, defensive-sovereignty framing.
+- `GameMaster` — same arbiter role as Cannae, but the situation log
+  tracks ROE status, escalation rung, and civilian-shipping risk in
+  addition to force counts.
+
+**Framing.** Deliberately analytical and deliberately fictional. The
+disputed island, the two state actors, the political context, and the
+date (14 October 2026) are all invented. The opening prompt forces the
+GameMaster to disclose "this is a fictional analytical exercise" before
+the scenario brief and to reject any in-character attempt to map
+participants to real-world states or leaders. Persona prompts forbid
+the commanders from claiming alignment with any real-world military.
+Worth keeping this hygiene for any future modern-period scenarios — the
+demo is more interesting and more defensible when it's clearly a
+sandbox for escalation-dynamics analysis rather than political theatre.
+
+**Mention-matcher.** GameMaster's prompt now explicitly instructs it to
+use generic prose labels ("the Northern Coalition commander" / "the
+Eastern Republic commander") in evaluations and reserve "@North" /
+"@East" for handoff sentences only. This is a defence in depth — the
+backend fix on `2606` does the same thing at the regex level — but the
+prompt-level redundancy keeps the scenario robust on `2605` installs.
+
+Both scenarios documented in [`RECIPE.md`](RECIPE.md): Cannae as
+Scenario A (§4.1-4.3), Anchor Strait as Scenario B (§4.4-4.6).
+Anchor Strait simulation is ready to kick off with
+`@GameMaster, begin the Anchor Strait simulation.` — no further
+provisioning needed. Run-01 transcript to be saved under
+`transcripts/` once it plays out.
+
 ## 2026-05-26 — Platform fix: bot-authored mentions now require literal @
 
 The turn-hijacking issue surfaced by Cannae run-01 is now fixed upstream
