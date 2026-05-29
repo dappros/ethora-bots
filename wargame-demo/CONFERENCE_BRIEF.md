@@ -227,6 +227,30 @@ all sides.
 **Five agents from zero install to first message — about 30 seconds of REST
 calls.**
 
+## Adjacent feature on the roadmap: self-edited soul.md
+
+Each agent record has a `soulMd` field — designed as an evolving
+private operational notebook the agent appends to itself, via
+`SOULMD:APPEND:` directives at the top of its replies. The base
+system-prompt protocol teaches every agent the format; the parser in
+ai-service strips the directive from the visible chat message and
+persists the note. The document is auto-prepended to the agent's
+system prompt on every later turn so the agent reads its own
+accumulated notes alongside the persona.
+
+An [illustrative example](examples/russia-soul-md-example.md) shows
+what the Russia agent's soul.md would look like after running the
+Narva simulations and the Gerasimov RAG session: six dated
+operational reflections, three internalised doctrinal preferences,
+all in the agent's voice.
+
+This feature is on the platform but the operator-to-ai-service
+propagation path is currently broken (engineering finding documented
+in [`JOURNAL.md`](JOURNAL.md)); shipping it cleanly is on the
+near-term roadmap. The capability matters because it gives each
+agent a private memory that grows across runs — the natural next
+step after "agents that act in character."
+
 ## Bonus: RAG-augmented persona (Russia citing Gerasimov)
 
 Beyond the persona prompt, each agent can have its own indexed knowledge
