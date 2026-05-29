@@ -27,6 +27,70 @@ this directory is in a public repo).
 
 ---
 
+## 2026-05-29 — Soul.md feature is partially broken — to revisit
+
+Tested the Soul.md self-update mechanism end-to-end to see whether it
+could carry agent learnings across wargame runs. The pipeline is
+designed correctly on paper — `Agent.soulMd` field in Mongo, frontend
+panel, REST CRUD, MCP tool, a `SOULMD:APPEND:` directive protocol
+emitted at the top of the bot's LLM output and stripped before the
+visible reply — but two distinct bugs break the operator-driven path.
+
+**Bug 1 — ai-service reads from the wrong collection.** The bot config
+loader in `ai-service/src/db/botModel.ts` queries the legacy `bots`
+Mongo collection, not the `agents` collection where modern Phase-1
+Agent-based bots actually store their `soulMd`. Confirmed empirically:
+`db.bots.find({xmppUsername: /6a19dde3/})` returns no record for the
+SoulTester agent we provisioned, nor for the Cannae GameMaster bot.
+Modern Agent-based bots live in-memory only in ai-service, populated
+by the API's `POST /bot-instances` callback at invite time — and that
+callback doesn't include the Agent's `soulMd` either, so the
+in-memory state is seeded with empty soul.md and stays that way.
+
+**Bug 2 — operator writes don't propagate to ai-service.** When an
+operator writes to `Agent.soulMd` via `POST /v2/agents/:id/soul` (or
+the MCP tool `ethora-agent-soul-append`), the API updates the Agent
+record in Mongo correctly, but there's no notification to ai-service
+to refresh its in-memory bot config. The bot continues to use whatever
+soul.md value it had at startup (empty, per bug 1). A pm2 restart of
+ai-service doesn't help — same wrong-collection loader.
+
+**Only working path: agent self-emission.** When the agent itself
+emits a `SOULMD:APPEND: <note>` directive at the top of an LLM reply,
+the parser in `openai.ts:127-177` strips it, POSTs to the internal
+`/v2/internal/agents/:id/soul` endpoint (using the
+`AI_SERVICE_SECRET`), and updates `client.config.soulMd` in-memory in
+the same call. This path correctly persists to Mongo *and* updates
+ai-service's cache. But it requires the LLM to emit the literal
+directive, which GPT-class models routinely fail to do — three tests
+with increasing explicitness ("begin with EXACTLY this line", verbatim
+quote of the directive format, etc.) all produced hallucinated "I've
+added that to my notes now" replies with no actual directive emitted.
+
+**For the wargame "agents learn across runs" use case:**
+
+- ❌ Don't promise soul.md as the cross-run memory mechanism — it
+  doesn't work end-to-end today.
+- ✅ Tactical workaround that works without code changes: between
+  runs, append "Prior-run lessons" content directly into the agent's
+  `prompt` field via `PUT /v2/agents/:id`, then re-invite into the new
+  room. The `prompt` field IS picked up correctly. Lower ceiling than
+  soul.md (prompt grows unbounded if not careful) but ships today.
+- 🔧 Real fix is ~3-5 days of work, three changes:
+  1. Make ai-service's bot loader JOIN to `Agent.soulMd` at runtime
+     (or sync soul.md from Agent → bot record at invite/update time).
+  2. Add a config-refresh hook the API calls on
+     `POST /v2/agents/:id/soul` to push the new soul.md to ai-service's
+     in-memory state.
+  3. Switch directive emission to OpenAI structured-output /
+     function-calling so the LLM can't hallucinate the write.
+- 🛑 The "Phase 2 heartbeat / autonomous reflection job" can't be
+  built until the Phase 1 promise is delivered.
+
+Test artifacts are in `/tmp/wargames/` on the dev machine (SoulTester
+agent + Soul.md test room on QA); they can be cleaned up. Agent ID
+`6a19d9abe768c36393a92f65` if anyone wants to reproduce.
+
 ## 2026-05-29 — Narva 2027 run-02: fix validated, different outcome
 
 Re-ran the scenario in a fresh room after the `2606` mention-matcher
