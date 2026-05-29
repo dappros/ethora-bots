@@ -27,6 +27,92 @@ this directory is in a public repo).
 
 ---
 
+## 2026-05-29 — Narva 2027 run-01: outcome plausible, multi-allied design half-broken
+
+First end-to-end run of Scenario C played out cleanly start to finish in
+about four and a half minutes wall-clock. Full transcript at
+[`transcripts/2026-05-29-narva-2027-run-01.md`](transcripts/2026-05-29-narva-2027-run-01.md).
+Backend was still on `2605` — the mention-matcher fix on `2606` had not
+been deployed to QA yet — so the prompt-level hygiene was carrying alone.
+
+**What worked.**
+
+- **Doctrinally plausible outcome.** GM declared a controlled limited-
+  war stalemate. NATO + Estonia contained the Russian incursion; Article
+  5 invoked around hour 24 of incident (a realistic timeline); VJTF
+  spearhead arriving in 12 hours, follow-on 24-36 hours; Suwałki Gap
+  preserved throughout as the reinforcement artery; civilian evacuation
+  completed under stress; Russian forces held the Narva bridgeheads but
+  never expanded. The limited-warfare envelope held — no breakout.
+- **Personas held in character.** Russia stayed disciplined and on
+  rationale, NATO spoke in proper alliance-staff brevity (VJTF, eFP,
+  NAC, weapons-tight), Estonia maintained sovereign-defense framing,
+  doctrinal vocabulary throughout (NASAMS, IRIS-T, Iskander, 76th
+  Guards VDV, Multinational Division Northeast, etc.).
+- **Hygiene rules held.** Opening disclaimer delivered as written, no
+  drift into political invective from any side, Russia's persona
+  articulated the stated rationale without endorsing it outside the
+  exercise. The GM never broke neutrality.
+- **GM situation-log structure held.** Every turn block was emitted in
+  the documented format with all fields updated.
+
+**What didn't.**
+
+The mention-matcher issue we saw with Hannibal in Cannae hit much harder
+in a five-agent room. Message tally by speaker:
+
+| NATO | Estonia | Russia | BalticAllies | GameMaster | Human |
+|---|---|---|---|---|---|
+| 16 | 9 | 5 | **1 (join notice only — zero in-character moves)** | 13 | 1 |
+
+Two distinct failure modes from the same underlying cause:
+
+1. **NATO and Estonia over-fired.** The display names "NATO" and "Estonia"
+   appear in nearly every message in any prose about this scenario —
+   "NATO Air Policing," "Estonian 1st Brigade," "NATO doctrine," and so
+   on. With `@` optional in the matcher, every prose mention triggered
+   a reply. NATO ended up at 16 messages including writing situation-log
+   blocks itself (impersonating the GM), a persona drift caused by the
+   over-firing — it saw so many GM-style outputs that it started copying
+   the format.
+2. **BalticAllies *under*-fired and was silent for the whole scenario.**
+   The display name "BalticAllies" is one word, not two, so prose
+   references like "Baltic allies" or "Latvian and Lithuanian forces"
+   never match it. After its initial join notice it never spoke. One of
+   the demo's headline differentiators — multiple allies on the same
+   side, each making distinct decisions — was structurally invisible in
+   this run.
+
+**Loop didn't terminate at the 12-turn cap either.** GM ran to "TURN 15"
+before concluding. Most likely the NATO-as-imposter-GM situation logs
+disrupted the GM's own turn counter, since both bots were emitting
+TURN-N blocks.
+
+**What this run validates and what it implies for next steps.**
+
+- The mention-matcher fix on `2606` is exactly the right fix and would
+  resolve cause #1 directly (no more prose-triggered firing). For
+  cause #2, the same fix is *also* the right answer — once every bot
+  fires only on literal `@<Name>`, the GM's turn discipline cleanly
+  rotates through all four commanders including BalticAllies. The fix
+  makes the multi-allied design work as designed.
+- **Cutover to deploy `2606` to QA is now the gating step** before any
+  meaningful next run of Narva or any other 4+-agent scenario.
+- **Smaller prompt fix worth adding:** every commander prompt should
+  include "do NOT write the situation log; that is the GameMaster's
+  role exclusively" — guards against the NATO-impersonating-GM drift
+  even if the matcher fix lands. Will fold this into RECIPE.md.
+- The five-agent multi-allied shape is sound *as a design* — Russia's
+  prompt did exactly what we wanted (stayed disciplined, only spoke on
+  explicit handoff). The remaining work is operational (deploy the
+  fix), not design.
+
+The scenario's analytical value showed through despite the structural
+glitch: the GM's eval text, the Article 5 process tempo, the Suwałki
+Gap framing, and the Russia-as-disciplined-operator persona all came
+across well. Worth re-running once `2606` is in QA to get a clean
+five-agent transcript with BalticAllies actually participating.
+
 ## 2026-05-26 — Scenario C provisioned: Narva 2027 (Article 5 contingency)
 
 Third scenario, and first with the multi-allied agent shape. Pinned room
