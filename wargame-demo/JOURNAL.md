@@ -27,6 +27,63 @@ this directory is in a public repo).
 
 ---
 
+## 2026-05-29 — RAG works: Russia cites Gerasimov from indexed Wikipedia
+
+Indexed two Wikipedia pages into the Russia agent's per-agent RAG
+namespace and confirmed the agent retrieves and cites them naturally
+in a Narva-scenario response. Demo material saved at
+[`transcripts/2026-05-29-russia-rag-gerasimov-demo.md`](transcripts/2026-05-29-russia-rag-gerasimov-demo.md).
+
+**Pipeline:**
+
+- `PUT /v2/agents/:id` with `{isRAG: true}` to enable
+- `POST /v2/apps/:appId/sources/site-crawl` with `{url, followLink:false, agentId}`
+  for each source. User-JWT auth (not app token — auth mode notes below).
+- Indexed: Wikipedia articles for `Gerasimov_doctrine` (165 KB) and
+  `Valery_Gerasimov` (289 KB).
+- Result: 615 embedding chunks in pgvector's `documents` table, scoped
+  by `agentId` column.
+
+**Confirmation:** ai-service logs at generation time print
+`RAG is ON; agentId= 6a16013d1cb4bebd68da244c  appId= 6a15b4ae1cb4bebd68d9ce6c`.
+The agent's response then cites Gerasimov's actual 2013 article title
+("The Value of Science is Foresight" / "Tsennost' nauki v predvidenii"),
+specific terms in Russian transliteration ("ne-lineinaya voyna",
+"asimmetricheskie meropriyatiya", "tsvetnye revolyutsii"), and the 4:1
+non-military-to-military ratio — none of which are in the base persona
+prompt. RAG content is woven into the persona; the agent stays in
+character and ends with the standard `@GameMaster, end of my turn`
+handoff. Wall-clock end-to-end: ~20 seconds for retrieval + LLM
+generation.
+
+**Three gotchas worth fixing upstream:**
+
+1. **MCP CLI payload schema is out of sync with the backend.** MCP's
+   `sourcesSiteCrawlV2` type expects `{knowledgeScope, savedAgentId}`,
+   backend validates `{url, followLink, agentId}` only and rejects the
+   MCP wrapper fields with `"knowledgeScope" is not allowed`. Small
+   `ethora-mcp-cli/src/apiClientDappros.ts` fix.
+2. **Auth mode mismatch on the no-appId variant.** The route
+   `POST /v2/sources/site-crawl` uses `authMw('app')` and then calls
+   `ensureUserCanUpdateApp(appAclRepo, appId, reqUser._id)` which
+   fails because the app token doesn't carry a user ACL. Workaround:
+   use the per-app variant `/v2/apps/:appId/sources/site-crawl` with
+   user JWT; that path goes through `loadManagedTargetApp` and resolves
+   ACL correctly.
+3. **Same propagation bug as soul.md.** Updating `isRAG` on the Agent
+   record via REST didn't propagate to ai-service's in-memory bot
+   config — log printed `RAG is OFF` even after the API update.
+   Workaround: restart ai-service + re-invite the agent into a new
+   room. The re-invite triggers `POST /bot-instances` with current
+   Agent values. Symptomatic of the same Agent → bot-config sync gap
+   documented in the soul.md entry.
+
+For the wargame demo: RAG is now a strong additional capability to
+demonstrate alongside the multi-agent persona play. Indexed Gerasimov
+content makes the Russia commander qualitatively more analytical and
+specific — a noticeable jump in fidelity for any conference audience
+familiar with the doctrine literature.
+
 ## 2026-05-29 — Soul.md feature is partially broken — to revisit
 
 Tested the Soul.md self-update mechanism end-to-end to see whether it

@@ -227,6 +227,64 @@ all sides.
 **Five agents from zero install to first message — about 30 seconds of REST
 calls.**
 
+## Bonus: RAG-augmented persona (Russia citing Gerasimov)
+
+Beyond the persona prompt, each agent can have its own indexed knowledge
+base via the platform's per-agent RAG. For the Russia commander we
+indexed two Wikipedia pages on the Gerasimov doctrine and verified that
+the agent retrieves and cites them mid-response while staying in
+character.
+
+**Setup (one PUT + two POSTs to the public REST API):**
+
+```
+PUT  /v2/agents/:id   { isRAG: true }
+POST /v2/apps/:appId/sources/site-crawl
+     { url: "https://en.wikipedia.org/wiki/Gerasimov_doctrine",
+       followLink: false, agentId: "<russia-id>" }
+POST /v2/apps/:appId/sources/site-crawl
+     { url: "https://en.wikipedia.org/wiki/Valery_Gerasimov",
+       followLink: false, agentId: "<russia-id>" }
+```
+
+Result: 615 embedding chunks in pgvector under Russia's agent
+namespace. End-to-end pipeline (crawl → embed → store → retrieve at
+generation) is built in — no extra services to deploy.
+
+**Russia's response** (excerpt; cites specific Gerasimov-doctrine
+terminology not present in its base persona prompt):
+
+> ... I shall apply the principles articulated by Chief of the General
+> Staff Valery Gerasimov in his 2013 article *"The Value of Science is
+> Foresight" (Tsennost' nauki v predvidenii)*. The doctrine emphasizes
+> the necessity of integrating military and non-military means in a
+> coordinated campaign, with a ratio of approximately **4:1 favoring
+> non-military actions** to achieve strategic objectives while
+> minimizing open conflict.
+>
+> First, the operation will employ the concept of **"non-linear war"
+> (ne-lineinaya voyna)** ... In Narva, this means simultaneous
+> information operations conducted to control the information space,
+> discredit Estonian authorities, and present the operation as a
+> legitimate peacekeeping mission ...
+>
+> Second, **asymmetric measures (asimmetricheskie meropriyatiya)** ...
+>
+> Third, the **"color revolutions" framing (tsvetnye revolyutsii)** as
+> a political warfare tool ...
+
+Full transcript:
+[`transcripts/2026-05-29-russia-rag-gerasimov-demo.md`](transcripts/2026-05-29-russia-rag-gerasimov-demo.md).
+
+**Why it matters for the talk.** A multi-agent simulation is one thing.
+A multi-agent simulation where each commander can carry its own
+analytically-grounded knowledge base — historical doctrine literature
+for a historical figure, current doctrine publications for a modern
+service — is materially different. The same pipeline (`/sources/site-
+crawl` and `/sources/docs-up` for direct document upload) supports any
+agent in any scenario. Demo-ready in ~30 seconds of REST calls per
+agent.
+
 ## What we improved while building this (platform hackability)
 
 Demonstrations of the platform's openness, all done during the demo
