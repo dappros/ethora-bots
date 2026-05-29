@@ -27,6 +27,70 @@ this directory is in a public repo).
 
 ---
 
+## 2026-05-29 — Narva 2027 run-02: fix validated, different outcome
+
+Re-ran the scenario in a fresh room after the `2606` mention-matcher
+fix was live-patched onto QA (live patch in `/home/ubuntu/ethora/...`
+plus `pm2 restart ai-service`; 9/9 tests passed against the running
+binary before the kickoff). Wall-clock ~4 minutes 7 seconds. Full
+transcript at
+[`transcripts/2026-05-29-narva-2027-run-02.md`](transcripts/2026-05-29-narva-2027-run-02.md).
+
+**The fix did exactly what it was supposed to.**
+
+| Speaker | Run 01 (pre-fix) | Run 02 (post-fix) |
+|---|---:|---:|
+| GameMaster | 13 | 19 |
+| Russia | 5 | 8 |
+| NATO | **16** (over-firing) | 8 |
+| Estonia | 9 | 1 |
+| BalticAllies | **0** (silenced) | 1 |
+
+Russia and NATO get equal turns. BalticAllies speaks substantively for
+the first time — its first message detailed Latvian Mechanized Brigade
+defending Daugavpils corridors, Lithuanian Iron Wolf Brigade rapid
+deployment to the Suwałki sector, Zemessardze rear-area sabotage
+defense, electronic warfare for GPS jamming mitigation, host-nation
+support for incoming NATO VJTF reinforcements. Exactly the regional
+coordinator role the prompt was designed for.
+
+**Different outcome, all on the same scenario brief.** Run 01 ended as
+a limited-war stalemate (Article 5 invoked at hour 24, no breakout, GM
+declared at turn 15). Run 02 ended as a negotiated de-escalation:
+Article 5 invoked at hour 20 (turn 10); at turn 13 Russia proposed a
+limited ceasefire through diplomatic backchannels; NATO accepted at
+turn 16 contingent on credible verification and respect for Estonian
+sovereignty; both sides froze offensive operations; an international
+verification mechanism with OSCE/UN observers was agreed for civilian
+evacuation. Civilian risk peaked at "high" rather than Run 01's
+"severe." Suwałki Gap remained open throughout.
+
+The GM applied the same realism standard in both runs. It neither
+punished Russia's ceasefire overture as weakness nor punished NATO's
+acceptance as appeasement. It evaluated each move on tactical and
+doctrinal plausibility. Useful demonstration that the simulation is
+not deterministic — same brief, different decisions, different
+plausible endings.
+
+**One remaining design wart.** After the initial round
+(Russia → NATO → Estonia → BalticAllies in turns 1-4), the GM drifted
+to a Russia↔NATO dialogue for the political-military exchanges. Estonia
+and BalticAllies each contributed only their initial response. The GM
+prompt specifies a six-step cycle including all four commanders, but
+the GM in practice drifted to a two-actor (alliance representative ↔
+opposing operational commander) shape once the strategic phase
+dominated.
+
+Fix for next iteration: tighten the GM prompt's turn-order rule with
+an explicit "after each Russia → GM cycle, address Estonia or
+BalticAllies in alternation before returning to Russia, even during
+political phases." Belt-and-suspenders mode. Will fold into RECIPE.md
+when convenient. For tomorrow's conference demo this is acceptable —
+the Run 02 transcript still shows clean five-agent activation in the
+first round, the diplomatic outcome is the most analytically
+interesting end state we've seen, and the side-by-side message tally
+Run 01 → Run 02 makes the platform-hackability story sharp.
+
 ## 2026-05-29 — Narva 2027 run-01: outcome plausible, multi-allied design half-broken
 
 First end-to-end run of Scenario C played out cleanly start to finish in

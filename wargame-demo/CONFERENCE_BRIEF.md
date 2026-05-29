@@ -95,22 +95,51 @@ real-world political position outside the exercise.
 | `BalticAllies` | Latvia + Lithuania joint coordinator | Regional (Suwałki Gap, host-nation support) | Medium |
 | `GameMaster` | Impartial arbiter | — | Per-turn |
 
-### Outcome (Run 01, 2026-05-29)
+### Two runs to date — different plausible outcomes
 
-**Limited-war stalemate.** Article 5 invoked at hour 24 of incident
-(turn 6 of simulation). Russian forces held the Narva bridgeheads but did
-not expand. Suwałki Gap preserved throughout as the reinforcement artery.
-Civilian evacuation completed under stress. No breakout — the
-limited-warfare envelope held.
+The scenario has been played twice, both on 2026-05-29. The runs ended
+differently — which is the point. The simulation is not deterministic;
+agent decisions matter; the same scenario brief can drive different
+plausible endings under the same realism standard. The Game Master
+applied the same evaluation criteria in both runs.
 
-Full transcript:
-[`transcripts/2026-05-29-narva-2027-run-01.md`](transcripts/2026-05-29-narva-2027-run-01.md)
+| | **Run 01** (backend 2605, pre-fix) | **Run 02** (backend 2606, fix live) |
+|---|---|---|
+| Outcome | Limited-war stalemate | Negotiated de-escalation |
+| Article 5 invoked at | hour 24 (turn 6) | hour 20 (turn 10) |
+| Civilian risk peak | severe | high |
+| Suwałki Gap | open throughout | open throughout |
+| End state | Russia held bridgeheads under NATO+EE containment, no breakout | Russia proposed limited ceasefire after Article 5, NATO accepted, international verification mechanism agreed |
+| Wall-clock | ~4 min 22 s | ~4 min 7 s |
 
-Engineering analysis of what worked and what didn't in Run 01 (the
-multi-agent shape exposed a mention-matcher edge-case in the response gate
-that the GM kept the scenario coherent through, and that we then fixed
-upstream in release `2606`):
-see [`JOURNAL.md`](JOURNAL.md).
+Full transcripts:
+[`transcripts/2026-05-29-narva-2027-run-01.md`](transcripts/2026-05-29-narva-2027-run-01.md),
+[`transcripts/2026-05-29-narva-2027-run-02.md`](transcripts/2026-05-29-narva-2027-run-02.md).
+
+The Game Master's analytical neutrality holds in both directions — it
+neither punished Russia's ceasefire overture as weakness nor punished
+NATO's acceptance as appeasement. It evaluated each move on tactical
+and doctrinal realism.
+
+### What the run-01 / run-02 difference also showed about the platform
+
+Run 01 produced a real engineering finding. The five-agent shape exposed
+an edge-case in the response gate's mention matcher (a moderator agent's
+prose references to other agents by name triggered turn-hijacking). We
+diagnosed it from the Run 01 transcript, fixed it in `responseGate.ts`,
+shipped it as release `2606`, and re-ran. Message-tally comparison:
+
+| Speaker | Run 01 (pre-fix) | Run 02 (post-fix) |
+|---|---:|---:|
+| GameMaster | 13 | 19 |
+| Russia | 5 | 8 |
+| NATO | **16** (over-firing) | 8 |
+| Estonia | 9 | 1 |
+| BalticAllies | **0** (silenced) | 1 |
+
+Run 02 confirms the fix: Russia and NATO get equal turns, the GM-controlled
+rotation rules the rhythm, and BalticAllies speaks substantively for the
+first time. Full engineering analysis in [`JOURNAL.md`](JOURNAL.md).
 
 ### Sample voice (transcript excerpts)
 
