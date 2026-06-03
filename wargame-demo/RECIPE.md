@@ -15,8 +15,8 @@ You need:
 - An Ethora installation (cloud, self-hosted, or `chat-qa.ethora.com`-style
   staging) with the AI service running.
 - An account on it that can create apps.
-- Either the MCP CLI configured against it (see
-  `ethora-mcp-cli`/`README.md`) or a working `curl` setup with the user JWT
+- Either the MCP server configured against it (see
+  `ethora-mcp-server`/`README.md`) or a working `curl` setup with the user JWT
   and app token below.
 
 Throughout this recipe `https://api.example.com` is a placeholder for the

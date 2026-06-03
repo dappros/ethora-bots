@@ -220,7 +220,7 @@ all sides.
 | Persona configuration | `Agent` record (system prompt, avatar, LLM config) |
 | Per-app embodiment | `BotInstance` (XMPP user with `isBot:true`) |
 | Turn-taking control | `responseMode: "mentioned"` + response gate |
-| Programmatic provisioning | REST API + MCP CLI tools |
+| Programmatic provisioning | REST API + MCP server tools |
 | Spectator participation | Same chat UI any human user already uses |
 | Persistent transcript | XMPP MAM archive |
 
@@ -314,10 +314,10 @@ agent.
 Demonstrations of the platform's openness, all done during the demo
 sessions themselves:
 
-1. **MCP CLI gating fields** — small upstream gap (agent response-gate
+1. **MCP server gating fields** — small upstream gap (agent response-gate
    fields not exposed in the MCP tool schemas) → diagnosed → patched →
    PR-ready in one session.
-2. **MCP CLI multi-agent discoverability** — restructured tool descriptions
+2. **MCP server multi-agent discoverability** — restructured tool descriptions
    so an MCP client (Claude, Cursor) reading the tool catalog now
    immediately surfaces the multi-agent capability; added `.describe()` on
    every field; extended the quickstart prompt with a "controlling
@@ -504,7 +504,7 @@ LLM видає щохода згідно з інструкціями промп�
 | Конфігурація персони | запис `Agent` (системний промпт, аватар, LLM-конфіг) |
 | Втілення на рівні застосунку | `BotInstance` (XMPP-користувач з `isBot:true`) |
 | Контроль ходів | `responseMode: "mentioned"` + response gate |
-| Програмне розгортання | REST API + MCP CLI tools |
+| Програмне розгортання | REST API + MCP server tools |
 | Участь глядачів | Той самий чат-UI, що й для будь-якого людського користувача |
 | Постійна стенограма | XMPP MAM archive |
 

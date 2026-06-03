@@ -142,7 +142,7 @@ For a deeper protocol walkthrough see `chatProtocol.md`.
 ## Related
 
 - [`@ethora/chat-component`](https://github.com/dappros/ethora-chat-component) — React.js chat SDK
-- [`ethora-mcp-cli`](https://github.com/dappros/ethora-mcp-cli) — MCP server for IDE / AI agent integration
+- [`ethora-mcp-server`](https://github.com/dappros/ethora-mcp-server) — MCP server for IDE / AI agent integration
 - [`rag_demos`](https://github.com/dappros/rag_demos) — RAG examples that pair well with these bots
 - [Ethora monorepo](https://github.com/dappros/ethora) — full ecosystem entry point
 - API docs (Swagger): [api.chat.ethora.com/api-docs/#/](https://api.chat.ethora.com/api-docs/#/)

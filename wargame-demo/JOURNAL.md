@@ -58,11 +58,11 @@ generation.
 
 **Three gotchas worth fixing upstream:**
 
-1. **MCP CLI payload schema is out of sync with the backend.** MCP's
+1. **MCP server payload schema is out of sync with the backend.** MCP's
    `sourcesSiteCrawlV2` type expects `{knowledgeScope, savedAgentId}`,
    backend validates `{url, followLink, agentId}` only and rejects the
    MCP wrapper fields with `"knowledgeScope" is not allowed`. Small
-   `ethora-mcp-cli/src/apiClientDappros.ts` fix.
+   `ethora-mcp-server/src/apiClientDappros.ts` fix.
 2. **Auth mode mismatch on the no-appId variant.** The route
    `POST /v2/sources/site-crawl` uses `authMw('app')` and then calls
    `ensureUserCanUpdateApp(appAclRepo, appId, reqUser._id)` which
@@ -441,7 +441,7 @@ Structured so future scenarios slot in as new `§4.x` prompt sections.
 the MCP tool catalog it was harder than it should have been to
 discover that you can deploy *multiple* agents into one chat with
 custom personas — exactly the differentiating use case. Three gaps
-fixed in `ethora-mcp-cli`:
+fixed in `ethora-mcp-server`:
 
 - Tool descriptions for `ethora-agents-create-v2` / `-update-v2` /
   `-agent-invite-to-chat` rewritten to explicitly mention the
@@ -522,9 +522,9 @@ The transcript is saved at
 [`transcripts/2026-05-26-cannae-run-01.md`](transcripts/2026-05-26-cannae-run-01.md)
 for case-study mining and as a baseline for tuning the next run.
 
-## 2026-05-26 — Upstream contribution: MCP CLI gating fields
+## 2026-05-26 — Upstream contribution: MCP server gating fields
 
-While preparing to provision the demo agents entirely via Ethora's MCP CLI,
+While preparing to provision the demo agents entirely via Ethora's MCP server,
 we hit a small but real gap: the `ethora-agents-create-v2` and
 `ethora-agents-update-v2` MCP tools didn't expose three Agent fields that
 the underlying REST API already accepted —
@@ -539,7 +539,7 @@ only speaks when @-mentioned by another participant — that's how the turn
 order is enforced without any extra orchestration code.
 
 Rather than work around it by calling REST directly, we added the fields to
-the MCP CLI schemas (a few-line change in `ethora-mcp-cli/src/tools.ts` and
+the MCP server schemas (a few-line change in `ethora-mcp-server/src/tools.ts` and
 the matching API client types). Now any future project that wants to
 configure agent gating from Claude / Cursor / any MCP client can do it
 in one call. Small surface fix, broadly useful.
@@ -569,7 +569,7 @@ What we found:
   consecutive bot turns the room pauses briefly to give humans a chance
   to speak. Crucially, **a direct @-mention bypasses that pause** — which
   is what lets us drive a clean turn order purely through prompts.
-- **MCP CLI covers the provisioning surface.** Creating apps, chat rooms,
+- **MCP server covers the provisioning surface.** Creating apps, chat rooms,
   agents, and inviting agents into rooms are all single MCP tool calls.
   That makes the whole demo bootstrap something Claude (or any MCP client)
   can do from a chat session — itself a nice demonstration of the
@@ -620,7 +620,7 @@ v1 scope deliberately kept small:
   log (turn number, forces remaining per side, terrain held, time
   elapsed) in its prompt context and re-emits it each turn. No new
   database schema for v1.
-- **Provisioned entirely via Ethora's MCP CLI.** The bootstrap (create
+- **Provisioned entirely via Ethora's MCP server.** The bootstrap (create
   app, create room, create three agents, invite them into the room) runs
   as a sequence of MCP tool calls — itself a demo of MCP-driven
   platform automation.

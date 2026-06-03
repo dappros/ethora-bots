@@ -101,12 +101,12 @@ retrieval over 615 chunks of indexed content + LLM generation.
 
 ## Gotchas hit during setup (notes for next time)
 
-1. **MCP CLI / backend mismatch on payload schema.** The MCP CLI's
+1. **MCP server / backend mismatch on payload schema.** The MCP server's
    `sourcesSiteCrawlV2` type expects `{knowledgeScope, savedAgentId}`,
    but the backend's `/v2/sources/site-crawl` controller validates
    `{url, followLink, agentId}` and rejects the MCP wrapper fields with
    `"knowledgeScope" is not allowed`. The two are out of sync. Worth a
-   small upstream fix in `ethora-mcp-cli/src/apiClientDappros.ts`.
+   small upstream fix in `ethora-mcp-server/src/apiClientDappros.ts`.
 2. **Auth mode mismatch on the no-appId variant.** `/v2/sources/site-crawl`
    uses `authMw('app')` and expects an app token, but the service code
    then calls `ensureUserCanUpdateApp(appAclRepo, appId, reqUser._id)`
